@@ -1,0 +1,490 @@
+:root {
+  --bg: #050505;
+  --bg-elevated: rgba(16, 16, 18, 0.72);
+  --bg-card: rgba(14, 10, 10, 0.78);
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f5f0ec;
+  --text-muted: rgba(245, 240, 236, 0.66);
+  --red-main: #ff2a2a;
+  --red-soft: rgba(255, 42, 42, 0.22);
+  --red-hot: #ff7452;
+  --shadow-hot: 0 24px 90px rgba(255, 42, 42, 0.2);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__next,
+main {
+  min-height: 100vh;
+  background: #030303 !important;
+  overflow-x: hidden;
+}
+
+html {
+  color-scheme: dark;
+  background: #030303 !important;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #030303 !important;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(46, 12, 10, 0.2), transparent 38%),
+    linear-gradient(180deg, #060404 0%, #030303 52%, #020202 100%) !important;
+  color: var(--text);
+  font-family: var(--font-body), sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 25%, transparent 75%, rgba(0, 0, 0, 0.5)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.015) 0,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Cinematic CS2 ambient background */
+@keyframes cs2-smoke-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.44;
+  }
+
+  50% {
+    transform: translate3d(4%, -3%, 0) scale(1.08);
+    opacity: 0.6;
+  }
+}
+
+@keyframes cs2-beam-sweep {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--beam-rotation)) scale(1);
+    opacity: 0.2;
+  }
+
+  50% {
+    transform: translate3d(2%, -1%, 0) rotate(calc(var(--beam-rotation) + 2deg)) scale(1.04);
+    opacity: 0.34;
+  }
+}
+
+@keyframes cs2-side-flicker {
+  0%,
+  100% {
+    opacity: 0.36;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 0.58;
+    transform: translateY(-1.5%);
+  }
+}
+
+@keyframes cs2-tracer-drift {
+  0% {
+    transform: translateX(-22vw) translateY(0) scaleX(0.86);
+    opacity: 0;
+  }
+
+  15%,
+  85% {
+    opacity: 0.75;
+  }
+
+  100% {
+    transform: translateX(22vw) translateY(-1.2vh) scaleX(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes cs2-dust-float {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-30px, -24px, 0);
+  }
+}
+
+@keyframes cs2-grain {
+  0% { background-position: 0 0; }
+  100% { background-position: 128px 128px; }
+}
+
+.cs2-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: #030303;
+  overflow: hidden;
+}
+
+.cs2-ambient__base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 120% 95% at 50% -10%, rgba(112, 37, 27, 0.22), transparent 48%),
+    radial-gradient(ellipse 84% 60% at 78% 12%, rgba(56, 78, 110, 0.18), transparent 52%),
+    linear-gradient(180deg, #080606 0%, #040404 30%, #020202 72%, #050303 100%);
+}
+
+.cs2-ambient__beam,
+.cs2-ambient__side,
+.cs2-ambient__sideGlow,
+.cs2-ambient__smoke,
+.cs2-ambient__structure,
+.cs2-ambient__catwalk,
+.cs2-ambient__lane,
+.cs2-ambient__tracer,
+.cs2-ambient__dust,
+.cs2-ambient__grid,
+.cs2-ambient__grain,
+.cs2-ambient__vignette {
+  position: absolute;
+}
+
+.cs2-ambient__side {
+  top: -4vh;
+  bottom: -4vh;
+  width: 12vw;
+  opacity: 0.52;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.02)),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 7.5%,
+      rgba(255, 132, 84, 0.06) 7.5% 7.8%,
+      transparent 7.8% 15%
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  mask-image: linear-gradient(180deg, transparent, black 12%, black 88%, transparent);
+}
+
+.cs2-ambient__side--left {
+  left: 0;
+  border-right: 1px solid rgba(255, 160, 118, 0.08);
+}
+
+.cs2-ambient__side--right {
+  right: 0;
+  transform: scaleX(-1);
+  border-right: 1px solid rgba(141, 182, 255, 0.08);
+}
+
+.cs2-ambient__sideGlow {
+  top: 12vh;
+  width: 22vw;
+  height: 58vh;
+  filter: blur(42px);
+  animation: cs2-side-flicker 13s ease-in-out infinite;
+}
+
+.cs2-ambient__sideGlow--left {
+  left: -10vw;
+  background: radial-gradient(circle at 70% 50%, rgba(255, 104, 68, 0.18) 0%, transparent 68%);
+}
+
+.cs2-ambient__sideGlow--right {
+  right: -10vw;
+  background: radial-gradient(circle at 30% 50%, rgba(116, 156, 255, 0.12) 0%, transparent 68%);
+  animation-delay: -6s;
+}
+
+.cs2-ambient__beam {
+  top: -18%;
+  width: 56vw;
+  height: 78vh;
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: cs2-beam-sweep 18s ease-in-out infinite;
+}
+
+.cs2-ambient__beam--hot {
+  --beam-rotation: -18deg;
+  left: -8vw;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255, 91, 61, 0.18) 38%, rgba(255, 169, 101, 0.28) 50%, transparent 72%);
+  transform: rotate(var(--beam-rotation));
+}
+
+.cs2-ambient__beam--cold {
+  --beam-rotation: 16deg;
+  right: -10vw;
+  animation-delay: -8s;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(110, 154, 255, 0.1) 40%, rgba(170, 206, 255, 0.18) 52%, transparent 72%);
+  transform: rotate(var(--beam-rotation));
+}
+
+.cs2-ambient__smoke {
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: cs2-smoke-drift 22s ease-in-out infinite;
+}
+
+.cs2-ambient__smoke--left {
+  width: 48vmax;
+  height: 40vmax;
+  left: -10vmax;
+  top: 12vh;
+  background: radial-gradient(circle, rgba(122, 42, 28, 0.26) 0%, transparent 68%);
+}
+
+.cs2-ambient__smoke--right {
+  width: 40vmax;
+  height: 34vmax;
+  right: -12vmax;
+  top: 18vh;
+  background: radial-gradient(circle, rgba(58, 82, 118, 0.2) 0%, transparent 70%);
+  animation-delay: -11s;
+}
+
+.cs2-ambient__structure {
+  left: -4vw;
+  width: 108vw;
+  background-repeat: no-repeat;
+  opacity: 0.78;
+}
+
+.cs2-ambient__structure--back {
+  bottom: 23vh;
+  height: 26vh;
+  background:
+    linear-gradient(180deg, rgba(11, 11, 12, 0), rgba(5, 5, 5, 0.92)),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 8%,
+      rgba(255, 159, 105, 0.035) 8% 8.3%,
+      transparent 8.3% 17%
+    );
+  clip-path: polygon(0 74%, 8% 55%, 14% 62%, 22% 38%, 31% 58%, 38% 34%, 49% 52%, 60% 30%, 69% 56%, 77% 36%, 87% 60%, 94% 47%, 100% 70%, 100% 100%, 0 100%);
+}
+
+.cs2-ambient__structure--mid {
+  bottom: 15vh;
+  height: 30vh;
+  background:
+    linear-gradient(180deg, rgba(14, 14, 16, 0), rgba(4, 4, 5, 0.98)),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 11%,
+      rgba(139, 181, 255, 0.028) 11% 11.35%,
+      transparent 11.35% 22%
+    );
+  clip-path: polygon(0 78%, 10% 60%, 18% 66%, 28% 42%, 40% 58%, 50% 46%, 61% 64%, 74% 40%, 84% 62%, 93% 50%, 100% 72%, 100% 100%, 0 100%);
+}
+
+.cs2-ambient__catwalk {
+  left: 0;
+  right: 0;
+  bottom: 18vh;
+  height: 6vh;
+  background:
+    linear-gradient(180deg, rgba(255, 145, 98, 0.08), rgba(255, 145, 98, 0)),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 6.5%,
+      rgba(255, 255, 255, 0.045) 6.5% 6.7%,
+      transparent 6.7% 13%
+    );
+  border-top: 1px solid rgba(255, 194, 135, 0.08);
+  opacity: 0.52;
+}
+
+.cs2-ambient__lane {
+  left: -8vw;
+  right: -8vw;
+  bottom: -10vh;
+  height: 38vh;
+  background:
+    linear-gradient(180deg, rgba(255, 126, 72, 0.05), rgba(255, 126, 72, 0) 16%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 8%,
+      rgba(255, 255, 255, 0.028) 8% 8.15%,
+      transparent 8.15% 16%
+    ),
+    linear-gradient(180deg, rgba(16, 14, 14, 0.3), rgba(4, 4, 4, 0.96));
+  transform: perspective(900px) rotateX(73deg);
+  transform-origin: top;
+  opacity: 0.78;
+}
+
+.cs2-ambient__tracer {
+  height: 1px;
+  width: 34vw;
+  background: linear-gradient(90deg, transparent, rgba(255, 188, 116, 0.64), transparent);
+  box-shadow: 0 0 18px rgba(255, 171, 99, 0.22);
+  animation: cs2-tracer-drift 9s linear infinite;
+  opacity: 0;
+}
+
+.cs2-ambient__tracer--1 {
+  top: 28vh;
+  left: 18vw;
+}
+
+.cs2-ambient__tracer--2 {
+  top: 38vh;
+  right: 16vw;
+  width: 22vw;
+  animation-delay: -3s;
+  background: linear-gradient(90deg, transparent, rgba(155, 197, 255, 0.42), transparent);
+  box-shadow: 0 0 16px rgba(136, 184, 255, 0.18);
+}
+
+.cs2-ambient__tracer--3 {
+  top: 56vh;
+  left: 30vw;
+  width: 18vw;
+  animation-delay: -6.5s;
+}
+
+.cs2-ambient__vignette {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 82% 74% at 50% 42%, transparent 36%, rgba(0, 0, 0, 0.28) 68%, rgba(0, 0, 0, 0.82) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.46), transparent 22%, transparent 78%, rgba(0, 0, 0, 0.72));
+  pointer-events: none;
+}
+
+.cs2-ambient__grid {
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 86% 82% at 50% 52%, black 14%, transparent 70%);
+  opacity: 0.32;
+}
+
+.cs2-ambient__dust {
+  inset: -10%;
+  background-image:
+    radial-gradient(circle at 12% 24%, rgba(255, 204, 160, 0.14) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 46% 44%, rgba(255, 184, 124, 0.12) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at 78% 26%, rgba(182, 212, 255, 0.1) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 62% 74%, rgba(255, 214, 174, 0.08) 0 1px, transparent 1.3px);
+  background-size: 220px 220px, 280px 280px, 260px 260px, 340px 340px;
+  animation: cs2-dust-float 14s linear infinite alternate;
+  opacity: 0.42;
+}
+
+.cs2-ambient__grain {
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  opacity: 0.045;
+  animation: cs2-grain 10s linear infinite;
+  mix-blend-mode: overlay;
+}
+
+@media (max-width: 900px) {
+  .cs2-ambient__side,
+  .cs2-ambient__sideGlow {
+    display: none;
+  }
+
+  .cs2-ambient__beam {
+    width: 82vw;
+    height: 54vh;
+  }
+
+  .cs2-ambient__structure--back,
+  .cs2-ambient__structure--mid {
+    height: 22vh;
+  }
+
+  .cs2-ambient__lane {
+    height: 28vh;
+    transform: perspective(900px) rotateX(78deg);
+  }
+
+  .cs2-ambient__tracer {
+    width: 42vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs2-ambient__sideGlow,
+  .cs2-ambient__beam,
+  .cs2-ambient__smoke,
+  .cs2-ambient__tracer,
+  .cs2-ambient__dust,
+  .cs2-ambient__grain {
+    animation: none;
+  }
+}
+
+::selection {
+  background: rgba(255, 42, 42, 0.4);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 42, 42, 0.45);
+  border-radius: 999px;
+}
+
+/* Recharts - force dark/transparent, no white backgrounds */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-cartesian-grid-horizontal,
+.recharts-layer {
+  background: transparent !important;
+}
+
+.chartWrap .recharts-wrapper {
+  background: transparent !important;
+}
+
+.chartWrap svg {
+  background: transparent !important;
+}

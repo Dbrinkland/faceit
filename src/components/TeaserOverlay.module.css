@@ -1,0 +1,541 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(255, 86, 58, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 20%, rgba(110, 156, 255, 0.08), transparent 20%),
+    linear-gradient(180deg, #070505 0%, #030303 54%, #020202 100%);
+}
+
+.clickLayer {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.halo,
+.lane,
+.sideRailLeft,
+.sideRailRight,
+.tracerOne,
+.tracerTwo,
+.tracerThree,
+.grid,
+.noise {
+  position: absolute;
+  pointer-events: none;
+}
+
+.halo {
+  inset: -10%;
+  background:
+    radial-gradient(circle at 35% 38%, rgba(255, 112, 76, 0.14), transparent 20%),
+    radial-gradient(circle at 70% 42%, rgba(111, 151, 255, 0.08), transparent 18%),
+    radial-gradient(circle at 50% 56%, rgba(255, 158, 99, 0.1), transparent 28%);
+  filter: blur(24px);
+  animation: teaserPulse 12s ease-in-out infinite;
+}
+
+.lane {
+  left: -10vw;
+  right: -10vw;
+  bottom: -18vh;
+  height: 44vh;
+  background:
+    linear-gradient(180deg, rgba(255, 142, 90, 0.06), rgba(255, 142, 90, 0) 16%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 8%,
+      rgba(255, 255, 255, 0.03) 8% 8.15%,
+      transparent 8.15% 16%
+    ),
+    linear-gradient(180deg, rgba(18, 16, 16, 0.24), rgba(4, 4, 4, 0.96));
+  transform: perspective(1100px) rotateX(74deg);
+  transform-origin: top;
+  opacity: 0.86;
+}
+
+.sideRailLeft,
+.sideRailRight {
+  top: 0;
+  bottom: 0;
+  width: clamp(34px, 4vw, 56px);
+  opacity: 0.7;
+}
+
+.sideRailLeft {
+  left: clamp(14px, 2vw, 28px);
+  background:
+    linear-gradient(180deg, transparent, rgba(255, 128, 86, 0.18) 18%, rgba(255, 128, 86, 0.04) 48%, transparent),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 30px,
+      rgba(255, 217, 181, 0.08) 30px 32px,
+      transparent 32px 62px
+    );
+  border-left: 1px solid rgba(255, 163, 120, 0.16);
+}
+
+.sideRailRight {
+  right: clamp(14px, 2vw, 28px);
+  background:
+    linear-gradient(180deg, transparent, rgba(137, 176, 255, 0.14) 18%, rgba(137, 176, 255, 0.04) 48%, transparent),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 30px,
+      rgba(219, 232, 255, 0.08) 30px 32px,
+      transparent 32px 62px
+    );
+  border-right: 1px solid rgba(150, 186, 255, 0.16);
+}
+
+.tracerOne,
+.tracerTwo,
+.tracerThree {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 190, 118, 0.88), transparent);
+  box-shadow: 0 0 18px rgba(255, 168, 99, 0.22);
+  animation: teaserTracer 6.8s linear infinite;
+  opacity: 0;
+}
+
+.tracerOne {
+  top: 24vh;
+  left: 16vw;
+  width: 28vw;
+}
+
+.tracerTwo {
+  top: 36vh;
+  right: 18vw;
+  width: 20vw;
+  animation-delay: -2.3s;
+  background: linear-gradient(90deg, transparent, rgba(152, 195, 255, 0.56), transparent);
+  box-shadow: 0 0 16px rgba(132, 178, 255, 0.18);
+}
+
+.tracerThree {
+  top: 58vh;
+  left: 32vw;
+  width: 18vw;
+  animation-delay: -4.6s;
+}
+
+.grid {
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 90% 86% at 50% 50%, black 20%, transparent 72%);
+  opacity: 0.34;
+}
+
+.noise {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 100% 100% at 50% 50%, transparent 34%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 28%, transparent 74%, rgba(0, 0, 0, 0.66));
+}
+
+.hudTop {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  right: 32px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(245, 240, 236, 0.58);
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.sideLabelLeft,
+.sideLabelRight {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  color: rgba(245, 240, 236, 0.28);
+  font-size: 0.78rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.sideLabelLeft {
+  left: 34px;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.sideLabelRight {
+  right: 34px;
+  transform: translateY(-50%);
+}
+
+.heroBlock {
+  position: absolute;
+  left: min(10vw, 112px);
+  top: 50%;
+  z-index: 2;
+  width: min(760px, calc(100vw - 420px));
+  transform: translateY(-54%);
+}
+
+.kicker {
+  margin: 0 0 18px;
+  color: #ff9b7b;
+  font-size: 0.92rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.titleBlock h2 {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(4.8rem, 11vw, 9.2rem);
+  line-height: 0.86;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+}
+
+.titleBlock h2:last-child {
+  color: rgba(245, 240, 236, 0.92);
+}
+
+.body {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: rgba(245, 240, 236, 0.76);
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  line-height: 1.65;
+}
+
+.statRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.statTile {
+  min-width: 170px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(18, 13, 13, 0.8), rgba(8, 6, 6, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.statTile span,
+.statTile strong {
+  display: block;
+}
+
+.statTile span {
+  color: rgba(245, 240, 236, 0.48);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.statTile strong {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: rgba(245, 240, 236, 0.94);
+}
+
+.rosterPanel {
+  position: absolute;
+  right: 76px;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  gap: 16px;
+  width: min(300px, 28vw);
+  transform: translateY(-50%);
+}
+
+.tagCloud {
+  display: grid;
+  gap: 10px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 240, 236, 0.72);
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: transform 0.24s ease, background 0.24s ease, border-color 0.24s ease;
+}
+
+.tagActive {
+  transform: translateX(-8px);
+  border-color: rgba(255, 158, 116, 0.22);
+  background: rgba(255, 108, 76, 0.1);
+  color: rgba(255, 236, 225, 0.96);
+}
+
+.rosterCard {
+  padding: 18px 18px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(19, 14, 14, 0.88), rgba(8, 6, 6, 0.8)),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+}
+
+.rosterCard span,
+.rosterCard strong,
+.rosterCard p {
+  display: block;
+  margin: 0;
+}
+
+.rosterCard span {
+  color: rgba(245, 240, 236, 0.48);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.rosterCard strong {
+  margin-top: 10px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 2rem;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rosterCard p {
+  margin-top: 12px;
+  color: rgba(245, 240, 236, 0.78);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.bottomBand {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 38px;
+  z-index: 2;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.timelineCopy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.timelineCopy span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 240, 236, 0.72);
+  font-size: 0.82rem;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.controlButton,
+.controlButtonPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.controlButton:hover,
+.controlButtonPrimary:hover {
+  opacity: 0.92;
+  transform: scale(1.03);
+}
+
+.controlButton {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(245, 240, 236, 0.9);
+}
+
+.controlButtonPrimary {
+  border-color: rgba(255, 100, 70, 0.3);
+  background: linear-gradient(135deg, rgba(255, 60, 45, 0.96), rgba(255, 100, 65, 0.9));
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(255, 60, 40, 0.2);
+}
+
+.progressTrack {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 18px;
+  z-index: 2;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.progressValue {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 80, 60, 0.92), rgba(255, 130, 90, 0.8));
+}
+
+@keyframes teaserPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+@keyframes teaserTracer {
+  0% {
+    transform: translateX(-18vw) scaleX(0.82);
+    opacity: 0;
+  }
+
+  18%,
+  82% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateX(18vw) scaleX(1.08);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .heroBlock {
+    left: 56px;
+    width: min(640px, calc(100vw - 360px));
+  }
+
+  .rosterPanel {
+    right: 40px;
+    width: min(260px, 30vw);
+  }
+}
+
+@media (max-width: 900px) {
+  .heroBlock {
+    left: 28px;
+    right: 28px;
+    width: auto;
+    transform: translateY(-56%);
+  }
+
+  .rosterPanel {
+    position: absolute;
+    left: 28px;
+    right: 28px;
+    top: auto;
+    bottom: 128px;
+    width: auto;
+    transform: none;
+  }
+
+  .tagCloud {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sideLabelLeft,
+  .sideLabelRight,
+  .sideRailLeft,
+  .sideRailRight,
+  .tracerThree {
+    display: none;
+  }
+
+  .bottomBand {
+    left: 16px;
+    right: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progressTrack {
+    left: 16px;
+    right: 16px;
+  }
+
+  .hudTop {
+    left: 16px;
+    right: 16px;
+    top: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .titleBlock h2 {
+    font-size: clamp(3.3rem, 18vw, 5rem);
+  }
+
+  .body {
+    margin-top: 16px;
+    font-size: 0.98rem;
+  }
+
+  .statRow,
+  .timelineCopy {
+    gap: 10px;
+  }
+
+  .statTile,
+  .rosterPanel {
+    min-width: 100%;
+  }
+
+  .tagCloud {
+    grid-template-columns: 1fr;
+  }
+
+  .timelineCopy span {
+    min-height: 34px;
+  }
+}
