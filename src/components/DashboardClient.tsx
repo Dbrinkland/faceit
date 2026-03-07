@@ -53,8 +53,8 @@ import washToiletsImage from "@/assets/wash_toilets.webp";
 const TEASER_STORAGE_KEY = "faceit-war-room-teaser-seen-v1";
 const MATCH_DAY_LOCK_STORAGE_KEY = "faceit-war-room-lock-to-07032026-v1";
 const SNACK_LOAD_STORAGE_KEY = "faceit-war-room-snack-load-v1";
-const ELO_BASELINE_STORAGE_PREFIX = "faceit-war-room-elo-baseline-";
 const SNACK_SCORE_MONSTER_MULTIPLIER = 12;
+const FACEIT_ELO_STEP = 25;
 const FALLBACK_SNACK_NICKNAMES = ["v1rtux", "C10_dk", "OllieReed", "SunnyTheB", "Wond3r_"];
 
 const BOO_MESSAGES = [
@@ -76,17 +76,6 @@ type SnackLoadEntry = {
   monsterCount: string;
   loadout: string;
 };
-
-type EloBaselineMap = Record<string, number>;
-
-function getCopenhagenDayKey(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "Europe/Copenhagen"
-  }).format(date);
-}
 
 function formatSignedNumber(value: number | null | undefined, digits = 0) {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -129,11 +118,6 @@ export function DashboardClient() {
   const [booReactions, setBooReactions] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
   const [booMessageIndex, setBooMessageIndex] = useState(0);
   const [snackEntries, setSnackEntries] = useState<SnackLoadEntry[]>([]);
-  const [eloBaseline, setEloBaseline] = useState<EloBaselineMap>({});
-  const eloBaselineStorageKey = useMemo(
-    () => `${ELO_BASELINE_STORAGE_PREFIX}${getCopenhagenDayKey()}`,
-    []
-  );
 
   const displayData = useMemo(
     () => buildDashboardView(data, lockToMatchDay),
@@ -195,23 +179,6 @@ export function DashboardClient() {
   }, [lockToMatchDay]);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(eloBaselineStorageKey);
-      if (!raw) {
-        setEloBaseline({});
-        return;
-      }
-
-      const parsed = JSON.parse(raw) as EloBaselineMap;
-      if (parsed && typeof parsed === "object") {
-        setEloBaseline(parsed);
-      }
-    } catch {
-      setEloBaseline({});
-    }
-  }, [eloBaselineStorageKey]);
-
-  useEffect(() => {
     setSnackEntries((current) => syncSnackEntries(rosterNicknames, current));
   }, [rosterNicknames.join("|")]);
 
@@ -224,41 +191,6 @@ export function DashboardClient() {
 
     return () => window.clearTimeout(timeoutId);
   }, [snackEntries]);
-
-  useEffect(() => {
-    if (players.length === 0) {
-      return;
-    }
-
-    setEloBaseline((current) => {
-      const next = { ...current };
-      let changed = false;
-
-      for (const player of players) {
-        if (player.faceitElo === null) {
-          continue;
-        }
-
-        const key = player.nickname.trim().toLowerCase();
-        if (!key || typeof next[key] === "number") {
-          continue;
-        }
-
-        next[key] = player.faceitElo;
-        changed = true;
-      }
-
-      if (!changed) {
-        return current;
-      }
-
-      try {
-        window.localStorage.setItem(eloBaselineStorageKey, JSON.stringify(next));
-      } catch {}
-
-      return next;
-    });
-  }, [players, eloBaselineStorageKey]);
 
   function closeTeaser() {
     try {
@@ -452,37 +384,10 @@ export function DashboardClient() {
   const snackPot = snackLeaderboard.reduce((total, entry) => total + entry.spend, 0);
   const snackMonsterCount = snackLeaderboard.reduce((total, entry) => total + entry.monsterCount, 0);
   const snackEntriesWithSpend = snackLeaderboard.filter((entry) => entry.spend > 0 || entry.monsterCount > 0).length;
-  const eloProgress = useMemo(() => {
-    let total = 0;
-    let tracked = 0;
-
-    for (const player of players) {
-      if (player.faceitElo === null) {
-        continue;
-      }
-
-      const key = player.nickname.trim().toLowerCase();
-      const baseline = eloBaseline[key];
-      if (typeof baseline !== "number") {
-        continue;
-      }
-
-      total += player.faceitElo - baseline;
-      tracked += 1;
-    }
-
-    return {
-      total: Math.round(total),
-      tracked
-    };
-  }, [players, eloBaseline]);
-  const averageEloDeltaPerPlayer = useMemo(() => {
-    if (eloProgress.tracked === 0) {
-      return null;
-    }
-
-    return eloProgress.total / eloProgress.tracked;
-  }, [eloProgress]);
+  const averageEloDeltaPerPlayer = useMemo(
+    () => (matchDayWins - matchDayLosses) * FACEIT_ELO_STEP,
+    [matchDayWins, matchDayLosses]
+  );
 
   const summaryCards = [
     {
@@ -543,11 +448,8 @@ export function DashboardClient() {
     },
     {
       label: "Avg ELO +/- pr spiller",
-      value: averageEloDeltaPerPlayer !== null ? formatSignedNumber(averageEloDeltaPerPlayer, 0) : "--",
-      detail:
-        averageEloDeltaPerPlayer !== null
-          ? `${eloProgress.tracked} spillere · ${formatNumber(matchDayMatches.length)} kampe i dag`
-          : "venter paa baseline",
+      value: formatSignedNumber(averageEloDeltaPerPlayer, 0),
+      detail: `${matchDayWins}W / ${matchDayLosses}L · ${formatNumber(matchDayMatches.length)} kampe`,
       icon: Shield
     },
     {
