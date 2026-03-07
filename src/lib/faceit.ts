@@ -20,11 +20,19 @@ const MATCH_DAY_LIMIT = 20;
 const MATCH_DAY_TIME_ZONE = "Europe/Copenhagen";
 
 type JsonRecord = Record<string, unknown>;
+type MatchPlayerAdvancedStats = {
+  adr: number | null;
+  utilityDmg: number | null;
+  effectiveFlashes: number | null;
+  entryAttempts: number | null;
+  entryKills: number | null;
+};
 type MatchEnrichment = {
   map: string | null;
   competition: string | null;
   score: string | null;
   finishedAt: string | null;
+  playerStatsByNickname: Map<string, MatchPlayerAdvancedStats>;
 };
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -306,6 +314,92 @@ function findDamageStats(
   return { adr, utilityDmg, effectiveFlashes, entryAttempts, entryKills };
 }
 
+function parseAdvancedStats(stats: JsonRecord, source: unknown): MatchPlayerAdvancedStats {
+  const damageFromItem = findDamageStats(source, 0);
+  const adr =
+    pickNumber(stats, [
+      "Average Damage per Round",
+      "Average Damage",
+      "ADR",
+      "Damage per Round",
+      "Average Damage/Round"
+    ]) ??
+    pickNumberByKeyPattern(stats, ["average damage", "adr", "damage per round"]) ??
+    damageFromItem.adr ??
+    (() => {
+      const totalDmg =
+        pickNumber(stats, ["Total Damage", "Damage"]) ??
+        pickNumberByKeyPattern(stats, ["total damage", "damage"]);
+      const rounds =
+        pickNumber(stats, ["Rounds", "Rounds Played", "Matches Played"]) ??
+        pickNumberByKeyPattern(stats, ["rounds", "matches"]);
+      if (totalDmg !== null && rounds !== null && rounds > 0) {
+        return round(totalDmg / rounds, 0);
+      }
+      return null;
+    })();
+
+  const utilityDmg =
+    pickNumber(stats, [
+      "Utility Damage",
+      "Utility Damage Total",
+      "Average Utility Damage",
+      "Utility Damage per Round",
+      "Average Utility Damage per Round"
+    ]) ??
+    pickNumberByKeyPattern(stats, ["utility damage", "utility dmg", "utility"]) ??
+    damageFromItem.utilityDmg ??
+    null;
+
+  const effectiveFlashes =
+    pickNumber(stats, ["Effective flashes", "Effective Flashes", "Effective Flash", "Flashes Effective"]) ??
+    pickNumberByKeyPattern(stats, ["effective flashes", "effective flash", "flash assists"]) ??
+    damageFromItem.effectiveFlashes ??
+    null;
+
+  const entryAttempts =
+    pickNumber(stats, [
+      "Entry Attempts",
+      "Entry attempts",
+      "Entry attempt",
+      "Entry duels attempted",
+      "Opening duels attempted",
+      "Attempted Entries",
+      "Attempted Entry",
+      "Opening attempts",
+      "Opening Attempts"
+    ]) ??
+    pickNumberByKeyPattern(
+      stats,
+      [
+        "entry attempts",
+        "entry attempt",
+        "entry duels attempted",
+        "opening duels attempted",
+        "attempted entries",
+        "attempted entry",
+        "opening attempts",
+        "opening attempt"
+      ]
+    ) ??
+    damageFromItem.entryAttempts ??
+    null;
+
+  const entryKills =
+    pickNumber(stats, ["Entry Kills", "Entry kills", "Opening Kills", "Opening kills", "Entry Frags"]) ??
+    pickNumberByKeyPattern(stats, ["entry kills", "opening kills", "entry frags", "opening frags"]) ??
+    damageFromItem.entryKills ??
+    null;
+
+  return {
+    adr: adr !== null ? round(adr, 0) : null,
+    utilityDmg: utilityDmg !== null ? round(utilityDmg, 0) : null,
+    effectiveFlashes: effectiveFlashes !== null ? round(effectiveFlashes, 1) : null,
+    entryAttempts: entryAttempts !== null ? round(entryAttempts, 1) : null,
+    entryKills: entryKills !== null ? round(entryKills, 1) : null
+  };
+}
+
 function resolveMapName(value: unknown): string | null {
   const direct = asString(value);
   if (!direct) {
@@ -519,77 +613,7 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
   const kr = pickNumber(stats, ["K/R Ratio", "KR Ratio", "Average KR Ratio"]) ?? 0;
   const headshotsPct =
     pickNumber(stats, ["Headshots %", "HS %", "Average Headshots %", "Average HS %"]) ?? 0;
-  const damageFromItem = findDamageStats(item, 0);
-  const adr =
-    pickNumber(stats, [
-      "Average Damage per Round",
-      "Average Damage",
-      "ADR",
-      "Damage per Round",
-      "Average Damage/Round"
-    ]) ??
-    pickNumberByKeyPattern(stats, ["average damage", "adr", "damage per round"]) ??
-    damageFromItem.adr ??
-    (() => {
-      const totalDmg =
-        pickNumber(stats, ["Total Damage", "Damage"]) ??
-        pickNumberByKeyPattern(stats, ["total damage", "damage"]);
-      const rounds =
-        pickNumber(stats, ["Rounds", "Rounds Played", "Matches Played"]) ??
-        pickNumberByKeyPattern(stats, ["rounds", "matches"]);
-      if (totalDmg !== null && rounds !== null && rounds > 0) {
-        return round(totalDmg / rounds, 0);
-      }
-      return null;
-    })();
-  const utilityDmg =
-    pickNumber(stats, [
-      "Utility Damage",
-      "Utility Damage Total",
-      "Average Utility Damage",
-      "Utility Damage per Round",
-      "Average Utility Damage per Round"
-    ]) ??
-    pickNumberByKeyPattern(stats, ["utility damage", "utility dmg", "utility"]) ??
-    damageFromItem.utilityDmg ??
-    null;
-  const effectiveFlashes =
-    pickNumber(stats, ["Effective flashes", "Effective Flashes", "Effective Flash", "Flashes Effective"]) ??
-    pickNumberByKeyPattern(stats, ["effective flashes", "effective flash", "flash assists"]) ??
-    damageFromItem.effectiveFlashes ??
-    null;
-  const entryAttempts =
-    pickNumber(stats, [
-      "Entry Attempts",
-      "Entry attempts",
-      "Entry attempt",
-      "Entry duels attempted",
-      "Opening duels attempted",
-      "Attempted Entries",
-      "Attempted Entry",
-      "Opening attempts",
-      "Opening Attempts"
-    ]) ??
-    pickNumberByKeyPattern(
-      stats,
-      [
-        "entry attempts",
-        "entry attempt",
-        "entry duels attempted",
-        "opening duels attempted",
-        "attempted entries",
-        "attempted entry",
-        "opening attempts",
-        "opening attempt"
-      ]
-    ) ??
-    damageFromItem.entryAttempts ??
-    null;
-  const entryKills =
-    pickNumber(stats, ["Entry Kills", "Entry kills", "Opening Kills", "Opening kills", "Entry Frags"]) ??
-    pickNumberByKeyPattern(stats, ["entry kills", "opening kills", "entry frags", "opening frags"]) ??
-    damageFromItem.entryKills ??
-    null;
+  const advancedStats = parseAdvancedStats(stats, item);
   const doubleKills = pickNumber(stats, ["Double Kills"]) ?? 0;
   const tripleKills = pickNumber(stats, ["Triple Kills"]) ?? 0;
   const quadroKills = pickNumber(stats, ["Quadro Kills"]) ?? 0;
@@ -628,11 +652,11 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
     quadroKills,
     pentaKills,
     multiKillPeak,
-    adr: adr !== null ? round(adr, 0) : null,
-    utilityDmg: utilityDmg !== null ? round(utilityDmg, 0) : null,
-    effectiveFlashes: effectiveFlashes !== null ? round(effectiveFlashes, 1) : null,
-    entryAttempts: entryAttempts !== null ? round(entryAttempts, 1) : null,
-    entryKills: entryKills !== null ? round(entryKills, 1) : null
+    adr: advancedStats.adr,
+    utilityDmg: advancedStats.utilityDmg,
+    effectiveFlashes: advancedStats.effectiveFlashes,
+    entryAttempts: advancedStats.entryAttempts,
+    entryKills: advancedStats.entryKills
   };
 }
 
@@ -649,6 +673,32 @@ async function fetchMatchEnrichment(matchId: string, apiKey: string): Promise<Ma
   const rounds = stats ? asArray(stats.rounds ?? stats.items) : [];
   const firstRound = rounds.find(isRecord) ? asRecord(rounds.find(isRecord)) : {};
   const roundStats = asRecord(firstRound.round_stats);
+  const playerStatsByNickname = new Map<string, MatchPlayerAdvancedStats>();
+
+  for (const roundValue of rounds) {
+    if (!isRecord(roundValue)) continue;
+    const teams = asArray(roundValue.teams);
+    for (const teamValue of teams) {
+      if (!isRecord(teamValue)) continue;
+      const players = asArray(teamValue.players ?? teamValue.roster ?? teamValue.members);
+      for (const playerValue of players) {
+        if (!isRecord(playerValue)) continue;
+        const nickname = asString(playerValue.nickname ?? playerValue.player_nickname ?? playerValue.nick);
+        if (!nickname) continue;
+        const playerStats = asRecord(playerValue.player_stats ?? playerValue.stats);
+        const parsed = parseAdvancedStats(playerStats, playerValue);
+        const key = nickname.toLowerCase();
+        const current = playerStatsByNickname.get(key);
+        playerStatsByNickname.set(key, {
+          adr: current?.adr ?? parsed.adr,
+          utilityDmg: current?.utilityDmg ?? parsed.utilityDmg,
+          effectiveFlashes: current?.effectiveFlashes ?? parsed.effectiveFlashes,
+          entryAttempts: current?.entryAttempts ?? parsed.entryAttempts,
+          entryKills: current?.entryKills ?? parsed.entryKills
+        });
+      }
+    }
+  }
 
   return {
     map:
@@ -670,7 +720,8 @@ async function fetchMatchEnrichment(matchId: string, apiKey: string): Promise<Ma
     finishedAt:
       toIsoDate(details?.finished_at ?? details?.finishedAt) ??
       toIsoDate(firstRound.finished_at ?? firstRound.finishedAt) ??
-      null
+      null,
+    playerStatsByNickname
   };
 }
 
@@ -693,6 +744,7 @@ function applyMatchEnrichment(player: PlayerSnapshot, matchLookup: Map<string, M
   const nextHistoryById = new Map(nextHistory.map((entry) => [entry.matchId, entry]));
   const nextForm = player.stats.form.map((match) => {
     const enrichment = match.matchId ? matchLookup.get(match.matchId) : null;
+    const advanced = enrichment?.playerStatsByNickname.get(player.nickname.toLowerCase()) ?? null;
     const fallback = match.matchId ? nextHistoryById.get(match.matchId) : undefined;
 
     return {
@@ -700,12 +752,18 @@ function applyMatchEnrichment(player: PlayerSnapshot, matchLookup: Map<string, M
       map: match.map ?? enrichment?.map ?? fallback?.map ?? null,
       competition: match.competition ?? enrichment?.competition ?? fallback?.competition ?? null,
       score: match.score ?? enrichment?.score ?? fallback?.score ?? null,
-      finishedAt: match.finishedAt ?? enrichment?.finishedAt ?? fallback?.finishedAt ?? null
+      finishedAt: match.finishedAt ?? enrichment?.finishedAt ?? fallback?.finishedAt ?? null,
+      adr: match.adr ?? advanced?.adr ?? null,
+      utilityDmg: match.utilityDmg ?? advanced?.utilityDmg ?? null,
+      effectiveFlashes: match.effectiveFlashes ?? advanced?.effectiveFlashes ?? null,
+      entryAttempts: match.entryAttempts ?? advanced?.entryAttempts ?? null,
+      entryKills: match.entryKills ?? advanced?.entryKills ?? null
     };
   });
 
   const nextMatchDayForm = player.stats.matchDayForm.map((match) => {
     const enrichment = match.matchId ? matchLookup.get(match.matchId) : null;
+    const advanced = enrichment?.playerStatsByNickname.get(player.nickname.toLowerCase()) ?? null;
     const fallback = match.matchId ? nextHistoryById.get(match.matchId) : undefined;
 
     return {
@@ -713,7 +771,12 @@ function applyMatchEnrichment(player: PlayerSnapshot, matchLookup: Map<string, M
       map: match.map ?? enrichment?.map ?? fallback?.map ?? null,
       competition: match.competition ?? enrichment?.competition ?? fallback?.competition ?? null,
       score: match.score ?? enrichment?.score ?? fallback?.score ?? null,
-      finishedAt: match.finishedAt ?? enrichment?.finishedAt ?? fallback?.finishedAt ?? null
+      finishedAt: match.finishedAt ?? enrichment?.finishedAt ?? fallback?.finishedAt ?? null,
+      adr: match.adr ?? advanced?.adr ?? null,
+      utilityDmg: match.utilityDmg ?? advanced?.utilityDmg ?? null,
+      effectiveFlashes: match.effectiveFlashes ?? advanced?.effectiveFlashes ?? null,
+      entryAttempts: match.entryAttempts ?? advanced?.entryAttempts ?? null,
+      entryKills: match.entryKills ?? advanced?.entryKills ?? null
     };
   });
 
