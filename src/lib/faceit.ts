@@ -14,7 +14,7 @@ import { normalizeCs2MapName } from "@/lib/cs2";
 
 const FACEIT_BASE_URL = "https://open.faceit.com/data/v4";
 const DEFAULT_NICKNAMES = ["v1rtux", "C10_dk", "OllieReed", "N-hat", "Wond3r_"];
-const RECENT_MATCH_LIMIT = 10;
+const RECENT_MATCH_LIMIT = 20;
 const HISTORY_LIMIT = 10;
 const MATCH_DAY_LIMIT = 20;
 const MATCH_DAY_TIME_ZONE = "Europe/Copenhagen";

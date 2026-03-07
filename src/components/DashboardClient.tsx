@@ -717,6 +717,15 @@ export function DashboardClient() {
         <div className={styles.rosterGrid}>
           {orderedPlayers.map((player, index) => {
             const lastMap = getCs2MapInfo(player.lastMatch?.map ?? null);
+            const previousMatch = player.stats.form.at(-2) ?? null;
+            const killsDelta =
+              player.lastMatch && previousMatch ? player.lastMatch.kills - previousMatch.kills : null;
+            const kdDelta =
+              player.lastMatch && previousMatch ? player.lastMatch.kd - previousMatch.kd : null;
+            const vsPreviousLabel =
+              killsDelta !== null && kdDelta !== null
+                ? `${formatSignedNumber(killsDelta, 0)} K · ${formatSignedNumber(kdDelta, 2)} K/D`
+                : "--";
 
             return (
               <motion.article
@@ -769,6 +778,10 @@ export function DashboardClient() {
                   <div>
                     <span>Streak</span>
                     <strong>{formatNumber(player.stats.lifetime.currentWinStreak)}</strong>
+                  </div>
+                  <div>
+                    <span>Vs forrige</span>
+                    <strong>{vsPreviousLabel}</strong>
                   </div>
                 </div>
 
