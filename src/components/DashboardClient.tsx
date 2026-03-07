@@ -53,7 +53,6 @@ import washToiletsImage from "@/assets/wash_toilets.webp";
 const TEASER_STORAGE_KEY = "faceit-war-room-teaser-seen-v1";
 const MATCH_DAY_LOCK_STORAGE_KEY = "faceit-war-room-lock-to-07032026-v1";
 const SNACK_LOAD_STORAGE_KEY = "faceit-war-room-snack-load-v1";
-const MATCH_DAY_LABEL = "07. mar. 2026";
 const SNACK_SCORE_MONSTER_MULTIPLIER = 12;
 const FALLBACK_SNACK_NICKNAMES = ["v1rtux", "C10_dk", "OllieReed", "SunnyTheB", "Wond3r_"];
 
@@ -130,6 +129,16 @@ export function DashboardClient() {
   const latestMap = getCs2MapInfo(latestMatch?.map ?? null);
   const sourceLabel =
     source === "live" ? "Live snapshot" : source === "cache" ? "Cached snapshot" : "Ingen snapshot endnu";
+  const matchDayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("da-DK", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Europe/Copenhagen"
+      }).format(syncStamp ? new Date(syncStamp) : new Date()),
+    [syncStamp]
+  );
 
   useEffect(() => {
     try {
@@ -980,7 +989,7 @@ export function DashboardClient() {
       <section className={styles.detailGrid}>
         <article className={styles.tableCard}>
           <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle}>Match Day · {MATCH_DAY_LABEL}</h2>
+            <h2 className={styles.sectionTitle}>Match Day · {matchDayLabel}</h2>
             <span className={styles.sectionBadge}>
               {matchDayMatches.length} matches · {matchDayMultiKills} multi-kills
             </span>
@@ -1041,7 +1050,7 @@ export function DashboardClient() {
             </div>
           ) : (
             <div className={styles.emptyState}>
-              Ingen kampe registreret for 07.03.2026 endnu. Tabellen fyldes, når der er FACEIT-kampe på den dato.
+              Ingen kampe registreret for dagens dato endnu. Tabellen fyldes, når der er FACEIT-kampe i dag.
             </div>
           )}
         </article>
@@ -1052,7 +1061,7 @@ export function DashboardClient() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>Player Form</h2>
             <span className={styles.sectionBadge}>
-              {lockToMatchDay ? "07.03.2026 scope" : "Impact · ADR · HS"}
+              {lockToMatchDay ? "Dagens dato scope" : "Impact · ADR · HS"}
             </span>
           </div>
 
@@ -1106,7 +1115,7 @@ export function DashboardClient() {
           ) : (
             <div className={styles.emptyState}>
               {lockToMatchDay
-                ? "Ingen squad stats for 07.03.2026 endnu. Day lock er aktiv, så tabellen fyldes først når dagens FACEIT-kampe er hentet."
+                ? "Ingen squad stats for dagens dato endnu. Day lock er aktiv, så tabellen fyldes først når dagens FACEIT-kampe er hentet."
                 : "Ingen squad stats endnu. Refresh efter første kamp for at fylde tabellen."}
             </div>
           )}
@@ -1173,7 +1182,7 @@ export function DashboardClient() {
           <span className={styles.pill}>Latest map: {latestMap.displayName}</span>
           <span className={styles.pill}>07.03: {matchDayMatches.length} matches</span>
           <span className={clsx(styles.pill, lockToMatchDay && styles.pillLive)}>
-            {lockToMatchDay ? "Locked: 07.03.2026" : "Scope: all recent"}
+            {lockToMatchDay ? "Locked: dagens dato" : "Scope: all recent"}
           </span>
           <span className={styles.pill}>Tracked: {data?.trackedNicknames.length ?? 5}</span>
         </div>

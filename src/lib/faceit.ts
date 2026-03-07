@@ -17,8 +17,7 @@ const DEFAULT_NICKNAMES = ["v1rtux", "C10_dk", "OllieReed", "N-hat", "Wond3r_"];
 const RECENT_MATCH_LIMIT = 10;
 const HISTORY_LIMIT = 10;
 const MATCH_DAY_LIMIT = 20;
-const MATCH_DAY_FROM = Date.parse("2026-03-07T00:00:00+01:00");
-const MATCH_DAY_TO = Date.parse("2026-03-07T23:59:59.999+01:00");
+const MATCH_DAY_TIME_ZONE = "Europe/Copenhagen";
 
 type JsonRecord = Record<string, unknown>;
 type MatchEnrichment = {
@@ -111,6 +110,66 @@ function sortDateDescending(left: string | null, right: string | null) {
   const leftTime = left ? new Date(left).getTime() : 0;
   const rightTime = right ? new Date(right).getTime() : 0;
   return rightTime - leftTime;
+}
+
+function getDatePartsInTimeZone(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+  const parts = formatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+
+  return { year, month, day };
+}
+
+function getTimeZoneOffsetMs(timeZone: string, date: Date) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+  const parts = formatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value);
+  const second = Number(parts.find((part) => part.type === "second")?.value);
+
+  const asUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  return asUtc - date.getTime();
+}
+
+function zonedDateTimeToUtcMs(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  millisecond: number,
+  timeZone: string
+) {
+  const utcGuess = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
+  const offset = getTimeZoneOffsetMs(timeZone, new Date(utcGuess));
+  return utcGuess - offset;
+}
+
+function getMatchDayWindow(now = new Date(), timeZone = MATCH_DAY_TIME_ZONE) {
+  const { year, month, day } = getDatePartsInTimeZone(now, timeZone);
+  const from = zonedDateTimeToUtcMs(year, month, day, 0, 0, 0, 0, timeZone);
+  const to = zonedDateTimeToUtcMs(year, month, day, 23, 59, 59, 999, timeZone);
+  return { from, to };
 }
 
 function pickString(record: JsonRecord, keys: string[]) {
@@ -985,6 +1044,7 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
   const gameId = resolveGameId(player);
   const games = asRecord(player.games);
   const game = asRecord(games[gameId]);
+  const { from: matchDayFrom, to: matchDayTo } = getMatchDayWindow();
 
   const [statsResponse, historyResponse, lifetimeResponse, matchDayStatsResponse] = await Promise.all([
     faceitFetch<{ items?: unknown[] }>(
@@ -997,7 +1057,7 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
     ),
     faceitFetch<JsonRecord>(`/players/${playerId}/stats/${gameId}`, apiKey),
     faceitFetch<{ items?: unknown[] }>(
-      `/players/${playerId}/games/${gameId}/stats?limit=${MATCH_DAY_LIMIT}&offset=0&from=${MATCH_DAY_FROM}&to=${MATCH_DAY_TO}`,
+      `/players/${playerId}/games/${gameId}/stats?limit=${MATCH_DAY_LIMIT}&offset=0&from=${matchDayFrom}&to=${matchDayTo}`,
       apiKey
     )
   ]);
