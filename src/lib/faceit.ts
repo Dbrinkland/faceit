@@ -352,7 +352,14 @@ function parseAdvancedStats(stats: JsonRecord, source: unknown): MatchPlayerAdva
     null;
 
   const effectiveFlashes =
-    pickNumber(stats, ["Effective flashes", "Effective Flashes", "Effective Flash", "Flashes Effective"]) ??
+    pickNumber(stats, [
+      "Effective flashes",
+      "Effective Flashes",
+      "Effective Flash",
+      "Flashes Effective",
+      "Flash Successes",
+      "Enemies Flashed"
+    ]) ??
     pickNumberByKeyPattern(stats, ["effective flashes", "effective flash", "flash assists"]) ??
     damageFromItem.effectiveFlashes ??
     null;
@@ -362,6 +369,7 @@ function parseAdvancedStats(stats: JsonRecord, source: unknown): MatchPlayerAdva
       "Entry Attempts",
       "Entry attempts",
       "Entry attempt",
+      "Entry Count",
       "Entry duels attempted",
       "Opening duels attempted",
       "Attempted Entries",
@@ -374,6 +382,7 @@ function parseAdvancedStats(stats: JsonRecord, source: unknown): MatchPlayerAdva
       [
         "entry attempts",
         "entry attempt",
+        "entry count",
         "entry duels attempted",
         "opening duels attempted",
         "attempted entries",
@@ -386,7 +395,15 @@ function parseAdvancedStats(stats: JsonRecord, source: unknown): MatchPlayerAdva
     null;
 
   const entryKills =
-    pickNumber(stats, ["Entry Kills", "Entry kills", "Opening Kills", "Opening kills", "Entry Frags"]) ??
+    pickNumber(stats, [
+      "Entry Kills",
+      "Entry kills",
+      "Opening Kills",
+      "Opening kills",
+      "Entry Frags",
+      "Entry Wins",
+      "First Kills"
+    ]) ??
     pickNumberByKeyPattern(stats, ["entry kills", "opening kills", "entry frags", "opening frags"]) ??
     damageFromItem.entryKills ??
     null;
@@ -602,7 +619,11 @@ function mapHistoryEntry(item: JsonRecord): PlayerHistoryEntry {
 function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined, index: number): PlayerFormMatch {
   const stats = asRecord(item.stats);
   const roundStats = asRecord(item.round_stats ?? stats);
-  const matchId = asString(item.match_id ?? item.matchId) ?? fallback?.matchId ?? null;
+  const matchId =
+    asString(item.match_id ?? item.matchId) ??
+    pickString(stats, ["Match Id", "MatchID", "match_id"]) ??
+    fallback?.matchId ??
+    null;
 
   const kills = pickNumber(stats, ["Kills", "kills"]) ?? 0;
   const assists = pickNumber(stats, ["Assists", "assists"]) ?? 0;
@@ -1162,7 +1183,10 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
     .filter(isRecord)
     .slice(0, RECENT_MATCH_LIMIT)
     .map((item, index) => {
-      const matchId = asString(item.match_id ?? item.matchId);
+      const stats = asRecord(item.stats);
+      const matchId =
+        asString(item.match_id ?? item.matchId) ??
+        pickString(stats, ["Match Id", "MatchID", "match_id"]);
       const fallback = (matchId ? historyById.get(matchId) : undefined) ?? historyEntries[index];
       return mapFormItem(item, fallback, index);
     });
@@ -1171,7 +1195,10 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
     .filter(isRecord)
     .slice(0, MATCH_DAY_LIMIT)
     .map((item, index) => {
-      const matchId = asString(item.match_id ?? item.matchId);
+      const stats = asRecord(item.stats);
+      const matchId =
+        asString(item.match_id ?? item.matchId) ??
+        pickString(stats, ["Match Id", "MatchID", "match_id"]);
       const fallback = (matchId ? historyById.get(matchId) : undefined) ?? historyEntries[index];
       return mapFormItem(item, fallback, index);
     });
