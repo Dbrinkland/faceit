@@ -452,7 +452,7 @@ export function DashboardClient() {
   const snackPot = snackLeaderboard.reduce((total, entry) => total + entry.spend, 0);
   const snackMonsterCount = snackLeaderboard.reduce((total, entry) => total + entry.monsterCount, 0);
   const snackEntriesWithSpend = snackLeaderboard.filter((entry) => entry.spend > 0 || entry.monsterCount > 0).length;
-  const totalEloProgress = useMemo(() => {
+  const eloProgress = useMemo(() => {
     let total = 0;
     let tracked = 0;
 
@@ -476,6 +476,14 @@ export function DashboardClient() {
       tracked
     };
   }, [players, eloBaseline]);
+  const averageEloDeltaPerMatch = useMemo(() => {
+    if (eloProgress.tracked === 0 || matchDayMatches.length === 0) {
+      return null;
+    }
+
+    const averageAcrossPlayers = eloProgress.total / eloProgress.tracked;
+    return averageAcrossPlayers / matchDayMatches.length;
+  }, [eloProgress, matchDayMatches.length]);
 
   const summaryCards = [
     {
@@ -535,11 +543,11 @@ export function DashboardClient() {
       icon: Swords
     },
     {
-      label: "Total ELO gained",
-      value: totalEloProgress.tracked > 0 ? formatSignedNumber(totalEloProgress.total, 0) : "--",
+      label: "Avg ELO +/- pr kamp",
+      value: averageEloDeltaPerMatch !== null ? formatSignedNumber(averageEloDeltaPerMatch, 1) : "--",
       detail:
-        totalEloProgress.tracked > 0
-          ? `${totalEloProgress.tracked} spillere vs. foerste snapshot i dag`
+        averageEloDeltaPerMatch !== null
+          ? `${eloProgress.tracked} spillere · total ${formatSignedNumber(eloProgress.total, 0)}`
           : "venter paa baseline",
       icon: Shield
     },
