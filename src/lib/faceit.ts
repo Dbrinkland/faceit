@@ -922,7 +922,16 @@ function buildOperations(players: PlayerSnapshot[]): {
           .slice()
           .sort(
             (left, right) =>
-              right.kills + right.kd * 8 + right.multiKillPeak * 5 - (left.kills + left.kd * 8 + left.multiKillPeak * 5)
+              right.kills +
+                right.kd * 10 +
+                (right.adr ?? 0) * 0.25 +
+                (right.entryKills ?? 0) * 2 +
+                right.multiKillPeak * 2 -
+              (left.kills +
+                left.kd * 10 +
+                (left.adr ?? 0) * 0.25 +
+                (left.entryKills ?? 0) * 2 +
+                left.multiKillPeak * 2)
           )[0];
 
         return {
