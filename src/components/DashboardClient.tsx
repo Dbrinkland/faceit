@@ -476,14 +476,13 @@ export function DashboardClient() {
       tracked
     };
   }, [players, eloBaseline]);
-  const averageEloDeltaPerMatch = useMemo(() => {
-    if (eloProgress.tracked === 0 || matchDayMatches.length === 0) {
+  const averageEloDeltaPerPlayer = useMemo(() => {
+    if (eloProgress.tracked === 0) {
       return null;
     }
 
-    const averageAcrossPlayers = eloProgress.total / eloProgress.tracked;
-    return averageAcrossPlayers / matchDayMatches.length;
-  }, [eloProgress, matchDayMatches.length]);
+    return eloProgress.total / eloProgress.tracked;
+  }, [eloProgress]);
 
   const summaryCards = [
     {
@@ -543,11 +542,11 @@ export function DashboardClient() {
       icon: Swords
     },
     {
-      label: "Avg ELO +/- pr kamp",
-      value: averageEloDeltaPerMatch !== null ? formatSignedNumber(averageEloDeltaPerMatch, 1) : "--",
+      label: "Avg ELO +/- pr spiller",
+      value: averageEloDeltaPerPlayer !== null ? formatSignedNumber(averageEloDeltaPerPlayer, 0) : "--",
       detail:
-        averageEloDeltaPerMatch !== null
-          ? `${eloProgress.tracked} spillere · total ${formatSignedNumber(eloProgress.total, 0)}`
+        averageEloDeltaPerPlayer !== null
+          ? `${eloProgress.tracked} spillere · ${formatNumber(matchDayMatches.length)} kampe i dag`
           : "venter paa baseline",
       icon: Shield
     },
