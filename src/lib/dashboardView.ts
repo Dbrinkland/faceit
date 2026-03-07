@@ -83,6 +83,8 @@ function aggregateMatches(players: PlayerSnapshot[], selector: (player: PlayerSn
           headshotsPct: number;
           adr: number | null;
           utilityDmg: number | null;
+          effectiveFlashes: number | null;
+          entryAttempts: number | null;
           doubleKills: number;
           tripleKills: number;
           quadroKills: number;
@@ -120,6 +122,8 @@ function aggregateMatches(players: PlayerSnapshot[], selector: (player: PlayerSn
         headshotsPct: match.headshotsPct,
         adr: match.adr,
         utilityDmg: match.utilityDmg,
+        effectiveFlashes: match.effectiveFlashes,
+        entryAttempts: match.entryAttempts,
         doubleKills: match.doubleKills,
         tripleKills: match.tripleKills,
         quadroKills: match.quadroKills,
@@ -142,6 +146,12 @@ function aggregateMatches(players: PlayerSnapshot[], selector: (player: PlayerSn
         .filter((value): value is number => value !== null);
       const utilityValues = entry.players
         .map((player) => player.utilityDmg)
+        .filter((value): value is number => value !== null);
+      const effectiveFlashValues = entry.players
+        .map((player) => player.effectiveFlashes)
+        .filter((value): value is number => value !== null);
+      const entryAttemptValues = entry.players
+        .map((player) => player.entryAttempts)
         .filter((value): value is number => value !== null);
       const multiKills = sum(
         entry.players.map(
@@ -170,6 +180,10 @@ function aggregateMatches(players: PlayerSnapshot[], selector: (player: PlayerSn
         averageHeadshotsPct: round(averageHeadshotsPct, 1),
         averageAdr: adrValues.length > 0 ? round(average(adrValues), 0) : null,
         averageUtilityDmg: utilityValues.length > 0 ? round(average(utilityValues), 0) : null,
+        averageEffectiveFlashes:
+          effectiveFlashValues.length > 0 ? round(average(effectiveFlashValues), 1) : null,
+        averageEntryAttempts:
+          entryAttemptValues.length > 0 ? round(average(entryAttemptValues), 1) : null,
         multiKills,
         peakMultiKill,
         standoutPlayer: standout?.nickname ?? null
@@ -317,6 +331,14 @@ function buildDerivedPlayers(players: PlayerSnapshot[], lockToMatchDay: boolean)
         .map((match) => match.utilityDmg)
         .filter((value): value is number => value !== null);
       const recentUtilityDmg = utilityValues.length > 0 ? round(average(utilityValues), 0) : null;
+      const effectiveFlashValues = selectedForm
+        .map((match) => match.effectiveFlashes)
+        .filter((value): value is number => value !== null);
+      const recentEffectiveFlashes = effectiveFlashValues.length > 0 ? round(average(effectiveFlashValues), 1) : null;
+      const entryAttemptValues = selectedForm
+        .map((match) => match.entryAttempts)
+        .filter((value): value is number => value !== null);
+      const recentEntryAttempts = entryAttemptValues.length > 0 ? round(average(entryAttemptValues), 1) : null;
       const totalKills = sum(selectedForm.map((match) => match.kills));
       const totalAssists = sum(selectedForm.map((match) => match.assists));
       const totalDeaths = sum(selectedForm.map((match) => match.deaths));
@@ -349,6 +371,8 @@ function buildDerivedPlayers(players: PlayerSnapshot[], lockToMatchDay: boolean)
           recentHeadshotsPct: round(recentHeadshotsPct, 1),
           recentAdr,
           recentUtilityDmg,
+          recentEffectiveFlashes,
+          recentEntryAttempts,
           totalKills,
           totalAssists,
           totalDeaths,

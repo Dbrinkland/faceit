@@ -150,13 +150,18 @@ function pickNumberByKeyPattern(record: JsonRecord, patterns: string[]): number 
   return null;
 }
 
-/** Recursively search for ADR/utility in nested structures (max depth 3). */
+/** Recursively search for advanced round stats in nested structures (max depth 3). */
 function findDamageStats(
   obj: unknown,
   depth: number
-): { adr: number | null; utilityDmg: number | null } {
+): {
+  adr: number | null;
+  utilityDmg: number | null;
+  effectiveFlashes: number | null;
+  entryAttempts: number | null;
+} {
   if (depth > 3 || obj === null || typeof obj !== "object") {
-    return { adr: null, utilityDmg: null };
+    return { adr: null, utilityDmg: null, effectiveFlashes: null, entryAttempts: null };
   }
   const record = obj as JsonRecord;
   const adr =
@@ -167,19 +172,51 @@ function findDamageStats(
     pickNumber(record, ["Utility Damage", "Average Utility Damage", "Utility Damage per Round"]) ??
     pickNumberByKeyPattern(record, ["utility damage", "utility"]) ??
     null;
-  if (adr !== null && utilityDmg !== null) return { adr, utilityDmg };
+  const effectiveFlashes =
+    pickNumber(record, [
+      "Effective flashes",
+      "Effective Flashes",
+      "Effective Flash",
+      "Flashes Effective",
+      "Effective flash assists"
+    ]) ??
+    pickNumberByKeyPattern(record, ["effective flashes", "effective flash", "flash assists"]) ??
+    null;
+  const entryAttempts =
+    pickNumber(record, [
+      "Entry Attempts",
+      "Entry attempts",
+      "Entry attempt",
+      "Entry duels attempted",
+      "Entry Duels Attempted",
+      "Opening duels attempted",
+      "Opening Attempts"
+    ]) ??
+    pickNumberByKeyPattern(record, ["entry attempts", "entry attempt", "entry duel", "opening attempt"]) ??
+    null;
+
+  if (adr !== null && utilityDmg !== null && effectiveFlashes !== null && entryAttempts !== null) {
+    return { adr, utilityDmg, effectiveFlashes, entryAttempts };
+  }
   for (const value of Object.values(record)) {
     if (value && typeof value === "object" && !Array.isArray(value)) {
       const nested = findDamageStats(value, depth + 1);
-      if (nested.adr !== null || nested.utilityDmg !== null) {
+      if (
+        nested.adr !== null ||
+        nested.utilityDmg !== null ||
+        nested.effectiveFlashes !== null ||
+        nested.entryAttempts !== null
+      ) {
         return {
           adr: nested.adr ?? adr,
-          utilityDmg: nested.utilityDmg ?? utilityDmg
+          utilityDmg: nested.utilityDmg ?? utilityDmg,
+          effectiveFlashes: nested.effectiveFlashes ?? effectiveFlashes,
+          entryAttempts: nested.entryAttempts ?? entryAttempts
         };
       }
     }
   }
-  return { adr, utilityDmg };
+  return { adr, utilityDmg, effectiveFlashes, entryAttempts };
 }
 
 function resolveMapName(value: unknown): string | null {
@@ -429,6 +466,23 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
     pickNumberByKeyPattern(stats, ["utility damage", "utility dmg", "utility"]) ??
     damageFromItem.utilityDmg ??
     null;
+  const effectiveFlashes =
+    pickNumber(stats, ["Effective flashes", "Effective Flashes", "Effective Flash", "Flashes Effective"]) ??
+    pickNumberByKeyPattern(stats, ["effective flashes", "effective flash", "flash assists"]) ??
+    damageFromItem.effectiveFlashes ??
+    null;
+  const entryAttempts =
+    pickNumber(stats, [
+      "Entry Attempts",
+      "Entry attempts",
+      "Entry attempt",
+      "Entry duels attempted",
+      "Opening duels attempted",
+      "Opening Attempts"
+    ]) ??
+    pickNumberByKeyPattern(stats, ["entry attempts", "entry attempt", "entry duel", "opening attempt"]) ??
+    damageFromItem.entryAttempts ??
+    null;
   const doubleKills = pickNumber(stats, ["Double Kills"]) ?? 0;
   const tripleKills = pickNumber(stats, ["Triple Kills"]) ?? 0;
   const quadroKills = pickNumber(stats, ["Quadro Kills"]) ?? 0;
@@ -468,7 +522,9 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
     pentaKills,
     multiKillPeak,
     adr: adr !== null ? round(adr, 0) : null,
-    utilityDmg: utilityDmg !== null ? round(utilityDmg, 0) : null
+    utilityDmg: utilityDmg !== null ? round(utilityDmg, 0) : null,
+    effectiveFlashes: effectiveFlashes !== null ? round(effectiveFlashes, 1) : null,
+    entryAttempts: entryAttempts !== null ? round(entryAttempts, 1) : null
   };
 }
 
@@ -589,6 +645,8 @@ function buildOperations(players: PlayerSnapshot[]): {
           headshotsPct: number;
           adr: number | null;
           utilityDmg: number | null;
+          effectiveFlashes: number | null;
+          entryAttempts: number | null;
           doubleKills: number;
           tripleKills: number;
           quadroKills: number;
@@ -626,6 +684,8 @@ function buildOperations(players: PlayerSnapshot[]): {
           headshotsPct: match.headshotsPct,
           adr: match.adr,
           utilityDmg: match.utilityDmg,
+          effectiveFlashes: match.effectiveFlashes,
+          entryAttempts: match.entryAttempts,
           doubleKills: match.doubleKills,
           tripleKills: match.tripleKills,
           quadroKills: match.quadroKills,
@@ -648,6 +708,12 @@ function buildOperations(players: PlayerSnapshot[]): {
           .filter((value): value is number => value !== null);
         const utilityValues = entry.players
           .map((player) => player.utilityDmg)
+          .filter((value): value is number => value !== null);
+        const effectiveFlashValues = entry.players
+          .map((player) => player.effectiveFlashes)
+          .filter((value): value is number => value !== null);
+        const entryAttemptValues = entry.players
+          .map((player) => player.entryAttempts)
           .filter((value): value is number => value !== null);
         const multiKills = sum(
           entry.players.map(
@@ -676,6 +742,10 @@ function buildOperations(players: PlayerSnapshot[]): {
           averageHeadshotsPct: round(averageHeadshotsPct, 1),
           averageAdr: adrValues.length > 0 ? round(average(adrValues), 0) : null,
           averageUtilityDmg: utilityValues.length > 0 ? round(average(utilityValues), 0) : null,
+          averageEffectiveFlashes:
+            effectiveFlashValues.length > 0 ? round(average(effectiveFlashValues), 1) : null,
+          averageEntryAttempts:
+            entryAttemptValues.length > 0 ? round(average(entryAttemptValues), 1) : null,
           multiKills,
           peakMultiKill,
           standoutPlayer: standout?.nickname ?? null
@@ -944,6 +1014,14 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
   const recentAdr = adrValues.length > 0 ? round(average(adrValues), 0) : null;
   const utilityValues = form.map((match) => match.utilityDmg).filter((v): v is number => v !== null);
   const recentUtilityDmg = utilityValues.length > 0 ? round(average(utilityValues), 0) : null;
+  const effectiveFlashValues = form
+    .map((match) => match.effectiveFlashes)
+    .filter((v): v is number => v !== null);
+  const recentEffectiveFlashes = effectiveFlashValues.length > 0 ? round(average(effectiveFlashValues), 1) : null;
+  const entryAttemptValues = form
+    .map((match) => match.entryAttempts)
+    .filter((v): v is number => v !== null);
+  const recentEntryAttempts = entryAttemptValues.length > 0 ? round(average(entryAttemptValues), 1) : null;
   const totalKills = sum(form.map((match) => match.kills));
   const totalAssists = sum(form.map((match) => match.assists));
   const totalDeaths = sum(form.map((match) => match.deaths));
@@ -983,6 +1061,8 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
       recentHeadshotsPct: round(recentHeadshotsPct, 1),
       recentAdr,
       recentUtilityDmg,
+      recentEffectiveFlashes,
+      recentEntryAttempts,
       totalKills,
       totalAssists,
       totalDeaths,

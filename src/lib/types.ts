@@ -20,6 +20,8 @@ export type PlayerFormMatch = {
   multiKillPeak: number;
   adr: number | null;
   utilityDmg: number | null;
+  effectiveFlashes: number | null;
+  entryAttempts: number | null;
 };
 
 export type PlayerHistoryEntry = {
@@ -81,6 +83,8 @@ export type PlayerSnapshot = {
     recentHeadshotsPct: number;
     recentAdr: number | null;
     recentUtilityDmg: number | null;
+    recentEffectiveFlashes: number | null;
+    recentEntryAttempts: number | null;
     totalKills: number;
     totalAssists: number;
     totalDeaths: number;
@@ -113,6 +117,8 @@ export type SquadRecentMatch = {
   averageHeadshotsPct: number;
   averageAdr: number | null;
   averageUtilityDmg: number | null;
+  averageEffectiveFlashes: number | null;
+  averageEntryAttempts: number | null;
   multiKills: number;
   peakMultiKill: number;
   standoutPlayer: string | null;

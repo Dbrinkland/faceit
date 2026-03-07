@@ -259,6 +259,8 @@ export function DashboardClient() {
           averageKr: entry.averageKr,
           averageAdr: entry.averageAdr,
           averageUtilityDmg: entry.averageUtilityDmg,
+          averageEffectiveFlashes: entry.averageEffectiveFlashes,
+          averageEntryAttempts: entry.averageEntryAttempts,
           averageHeadshotsPct: entry.averageHeadshotsPct,
           multiKills: entry.multiKills,
           standoutPlayer: entry.standoutPlayer ?? "--"
@@ -296,6 +298,12 @@ export function DashboardClient() {
     .filter((value): value is number => value !== null);
   const recentUtilityValues = players
     .map((player) => player.stats.recentUtilityDmg)
+    .filter((value): value is number => value !== null);
+  const recentEffectiveFlashValues = players
+    .map((player) => player.stats.recentEffectiveFlashes)
+    .filter((value): value is number => value !== null);
+  const recentEntryAttemptValues = players
+    .map((player) => player.stats.recentEntryAttempts)
     .filter((value): value is number => value !== null);
   const latestMvpNickname = latestMatch?.standoutPlayer ?? summary?.bestPerformer?.nickname ?? null;
   const latestMvpPlayer =
@@ -378,6 +386,24 @@ export function DashboardClient() {
           ? `${formatNumber(recentUtilityValues.reduce((sum, value) => sum + value, 0) / recentUtilityValues.length, 0)} util dmg`
           : "utility pending",
       icon: Flame
+    },
+    {
+      label: "Entry attempts",
+      value:
+        recentEntryAttemptValues.length > 0
+          ? formatNumber(
+              recentEntryAttemptValues.reduce((sum, value) => sum + value, 0) / recentEntryAttemptValues.length,
+              1
+            )
+          : "--",
+      detail:
+        recentEffectiveFlashValues.length > 0
+          ? `${formatNumber(
+              recentEffectiveFlashValues.reduce((sum, value) => sum + value, 0) / recentEffectiveFlashValues.length,
+              1
+            )} effective flashes`
+          : "flash data pending",
+      icon: AlertTriangle
     },
     {
       label: "Multi-kills",
@@ -782,6 +808,14 @@ export function DashboardClient() {
                 <span>Multi-kills</span>
                 <strong>{formatNumber(latestMatch?.multiKills ?? null)}</strong>
               </div>
+              <div>
+                <span>Eff. flashes</span>
+                <strong>{formatNumber(latestMatch?.averageEffectiveFlashes ?? null, 1)}</strong>
+              </div>
+              <div>
+                <span>Entry attempts</span>
+                <strong>{formatNumber(latestMatch?.averageEntryAttempts ?? null, 1)}</strong>
+              </div>
             </div>
 
             <div className={styles.statusRow}>
@@ -964,6 +998,8 @@ export function DashboardClient() {
                     <th>Avg kills</th>
                     <th>Avg K/D</th>
                     <th>Avg ADR</th>
+                    <th>Eff. flashes</th>
+                    <th>Entry attempts</th>
                     <th>Multi</th>
                     <th>Standout</th>
                   </tr>
@@ -993,6 +1029,8 @@ export function DashboardClient() {
                         <td>{formatNumber(entry.averageKills, 1)}</td>
                         <td>{formatNumber(entry.averageKd, 2)}</td>
                         <td>{formatNumber(entry.averageAdr ?? null, 0)}</td>
+                        <td>{formatNumber(entry.averageEffectiveFlashes ?? null, 1)}</td>
+                        <td>{formatNumber(entry.averageEntryAttempts ?? null, 1)}</td>
                         <td>{entry.multiKills}</td>
                         <td>{entry.standoutPlayer ?? "--"}</td>
                       </tr>
@@ -1033,6 +1071,8 @@ export function DashboardClient() {
                     <th>Avg kills</th>
                     <th>ADR</th>
                     <th>Utility dmg</th>
+                    <th>Eff. flashes</th>
+                    <th>Entry att.</th>
                     <th>Multi</th>
                   </tr>
                 </thead>
@@ -1054,6 +1094,8 @@ export function DashboardClient() {
                         <td>{hasPlayerData ? formatNumber(player.stats.recentAverageKills, 1) : "--"}</td>
                         <td>{hasPlayerData ? formatNumber(player.stats.recentAdr ?? null, 0) : "--"}</td>
                         <td>{hasPlayerData ? formatNumber(player.stats.recentUtilityDmg ?? null, 0) : "--"}</td>
+                        <td>{hasPlayerData ? formatNumber(player.stats.recentEffectiveFlashes ?? null, 1) : "--"}</td>
+                        <td>{hasPlayerData ? formatNumber(player.stats.recentEntryAttempts ?? null, 1) : "--"}</td>
                         <td>{hasPlayerData ? player.stats.multiKills.total : "--"}</td>
                       </tr>
                     );
