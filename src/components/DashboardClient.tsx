@@ -45,7 +45,6 @@ const TeaserOverlay = dynamic(
   }
 );
 
-import { CS2AmbientBackground } from "./CS2AmbientBackground";
 import cleaningImage from "@/assets/cleaning.png";
 import rushLangosImage from "@/assets/rushlangos.jpeg";
 import sunnyBannedImage from "@/assets/sunny-banned.png";
@@ -68,10 +67,6 @@ const BOO_MESSAGES = [
 
 function formatPeakLabel(value: number) {
   return value >= 2 ? `${value}K peak` : "Ingen peak";
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }
 
 type ViewMode = "dashboard" | "sonny" | "tactics" | "snacks";
@@ -276,50 +271,6 @@ export function DashboardClient() {
   const recentUtilityValues = players
     .map((player) => player.stats.recentUtilityDmg)
     .filter((value): value is number => value !== null);
-  const recentWins = operations.recentMatches.filter((entry) => entry.result === "W").length;
-  const recentLosses = operations.recentMatches.filter((entry) => entry.result === "L").length;
-  const recentMultiKills = operations.recentMatches.reduce((total, entry) => total + entry.multiKills, 0);
-  const recentMatchCount = operations.recentMatches.length;
-  const recentKdDelta = ((summary?.averageKd ?? 0) - 1) * 100;
-  const momentumScore = Math.round(
-    clamp(
-      recentKdDelta +
-        (summary?.averageWinRate ?? 0) * 0.35 +
-        recentWins * 8 -
-        recentLosses * 7 +
-        recentMultiKills / Math.max(1, recentMatchCount),
-      -99,
-      99
-    )
-  );
-  const trainStateLabel =
-    momentumScore >= 24
-      ? "full send"
-      : momentumScore >= 8
-        ? "on rails"
-        : momentumScore > -8
-          ? "brake check"
-          : "derailed";
-  const trainStatusCopy =
-    latestMatch?.result === "L"
-      ? "I tabte jeres sidste kamp, gider i overhovedet det her?"
-      : latestMatch?.result === "W"
-        ? "Elo train is rolling. Hold presset oppe."
-        : "Ingen frisk kamp endnu. Start motoren.";
-  const eloTrainScope = lockToMatchDay ? "07.03 line" : "recent line";
-  const trainMetricLabel = momentumScore >= 0 ? `Momentum +${momentumScore}` : `Momentum ${momentumScore}`;
-  const trainLastMatchSummary = latestMatch
-    ? `${latestMap.displayName} ${latestMatch.score ?? "--"}`
-    : "No match logged";
-  const trainPeakSummary =
-    latestMatch && latestMatch.peakMultiKill > 0
-      ? `${formatPeakLabel(latestMatch.peakMultiKill)} squad peak`
-      : "no multi spike yet";
-  const trainTickerSegments = Array.from({ length: 4 }, (_, index) => ({
-    id: index,
-    text: trainMetricLabel,
-    detail: `${trainStateLabel} // ${eloTrainScope} // ${recentWins}W ${recentLosses}L // ${trainLastMatchSummary} // ${trainPeakSummary} // ${formatNumber(summary?.averageKd ?? null, 2)} K/D`
-  }));
   const latestMvpNickname = latestMatch?.standoutPlayer ?? summary?.bestPerformer?.nickname ?? null;
   const latestMvpPlayer =
     latestMvpNickname
@@ -423,8 +374,6 @@ export function DashboardClient() {
           <TeaserOverlay onClose={closeTeaser} trackedNicknames={data?.trackedNicknames ?? []} />
         ) : null}
       </AnimatePresence>
-      <CS2AmbientBackground />
-
       <header className={styles.topBar}>
         <div className={styles.brandBlock}>
           <span className={styles.brandEyebrow}>Faceit War Room</span>
@@ -478,37 +427,6 @@ export function DashboardClient() {
           />
         </div>
       </header>
-
-      <motion.div
-        className={styles.trainTicker}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.08 }}
-      >
-        <div className={styles.trainTickerHead}>
-          <span className={styles.trainTickerLabel}>ELO Train // Live rail</span>
-          <span className={styles.trainTickerSpeed}>{trainMetricLabel}</span>
-        </div>
-        <div
-          className={clsx(
-            styles.trainTickerAlert,
-            latestMatch?.result === "L" ? styles.trainTickerAlertLoss : styles.trainTickerAlertLive
-          )}
-        >
-          {trainStatusCopy}
-        </div>
-        <div className={styles.trainTickerViewport}>
-          <div className={styles.trainTickerRail}>
-            {trainTickerSegments.map((segment) => (
-              <span key={segment.id} className={styles.trainTickerSegment}>
-                <strong>{segment.text}</strong>
-                <span className={styles.trainTickerDot} />
-                <span>{segment.detail}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </motion.div>
 
       <AnimatePresence mode="wait">
       {viewMode === "sonny" ? (

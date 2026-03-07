@@ -587,16 +587,6 @@
   }
 }
 
-@keyframes eloTrainScroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
 @keyframes sirenSweep {
   0%,
   100% {
@@ -655,131 +645,11 @@
   font-size: 1rem;
 }
 
-.trainTicker {
-  position: relative;
-  min-width: 0;
-  margin-top: 18px;
-  padding: 12px 16px 14px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background:
-    linear-gradient(135deg, rgba(24, 14, 14, 0.92), rgba(12, 10, 10, 0.88)),
-    rgba(9, 9, 11, 0.74);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 18px 54px rgba(0, 0, 0, 0.28);
-  overflow: hidden;
-}
-
-.trainTicker::before,
-.trainTicker::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-
-.trainTicker::before {
-  inset: -18% auto -18% -8%;
-  width: 26%;
-  background: radial-gradient(circle, rgba(255, 118, 87, 0.2) 0%, transparent 70%);
-  filter: blur(18px);
-  animation: sirenSweep 4.2s ease-in-out infinite;
-}
-
-.trainTicker::after {
-  inset: auto 0 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 208, 122, 0.72), transparent);
-  opacity: 0.68;
-}
-
-.trainTickerHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.trainTickerAlert {
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.trainTickerAlertLive {
-  background: rgba(255, 187, 126, 0.08);
-  color: rgba(255, 226, 184, 0.88);
-}
-
-.trainTickerAlertLoss {
-  background: rgba(255, 86, 68, 0.1);
-  color: #ffd1c7;
-}
-
-.trainTickerLabel,
 .mvpSirenEyebrow {
   color: #ff9d7d;
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-
-.trainTickerSpeed {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 193, 114, 0.2);
-  background: rgba(255, 158, 104, 0.1);
-  color: #ffe0bc;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.trainTickerViewport {
-  position: relative;
-  overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-}
-
-.trainTickerRail {
-  display: flex;
-  gap: 22px;
-  width: max-content;
-  animation: eloTrainScroll 24s linear infinite;
-}
-
-.trainTickerSegment {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: rgba(245, 240, 236, 0.78);
-  font-size: 0.83rem;
-  white-space: nowrap;
-}
-
-.trainTickerSegment strong {
-  font-family: var(--font-display), sans-serif;
-  font-size: 0.98rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #fff2cf;
-}
-
-.trainTickerDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #ff6a4a;
-  box-shadow: 0 0 0 5px rgba(255, 107, 74, 0.12), 0 0 18px rgba(255, 107, 74, 0.3);
 }
 
 .headerPills,
@@ -1614,11 +1484,6 @@
     padding: 20px 0 88px;
   }
 
-  .trainTickerHead {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .mvpSiren {
     grid-template-columns: 1fr;
   }
@@ -1683,14 +1548,6 @@
 
   .wordArtWrap {
     top: 52%;
-  }
-
-  .trainTicker {
-    padding: 12px 14px;
-  }
-
-  .trainTickerRail {
-    animation-duration: 18s;
   }
 
   .snackInputCard {
