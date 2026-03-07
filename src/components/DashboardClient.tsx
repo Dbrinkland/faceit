@@ -15,7 +15,7 @@ import {
   Trophy,
   WifiOff
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -107,7 +107,10 @@ export function DashboardClient() {
   const [booMessageIndex, setBooMessageIndex] = useState(0);
   const [snackEntries, setSnackEntries] = useState<SnackLoadEntry[]>([]);
 
-  const displayData = buildDashboardView(data, lockToMatchDay);
+  const displayData = useMemo(
+    () => buildDashboardView(data, lockToMatchDay),
+    [data, lockToMatchDay]
+  );
   const players = displayData?.players ?? [];
   const summary = displayData?.summary ?? null;
   const operations = displayData?.operations ?? {
@@ -158,9 +161,13 @@ export function DashboardClient() {
   }, [rosterNicknames.join("|")]);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(SNACK_LOAD_STORAGE_KEY, JSON.stringify(snackEntries));
-    } catch {}
+    const timeoutId = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(SNACK_LOAD_STORAGE_KEY, JSON.stringify(snackEntries));
+      } catch {}
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
   }, [snackEntries]);
 
   function closeTeaser() {
@@ -219,47 +226,66 @@ export function DashboardClient() {
     );
   }
 
-  const orderedPlayers = [...players].sort(
-    (left, right) =>
-      sortDateDescending(left.lastMatch?.finishedAt ?? null, right.lastMatch?.finishedAt ?? null) ||
-      right.impactScore - left.impactScore
+  const orderedPlayers = useMemo(
+    () =>
+      [...players].sort(
+        (left, right) =>
+          sortDateDescending(left.lastMatch?.finishedAt ?? null, right.lastMatch?.finishedAt ?? null) ||
+          right.impactScore - left.impactScore
+      ),
+    [players]
   );
 
-  const impactSortedPlayers = [...players].sort((left, right) => right.impactScore - left.impactScore);
+  const impactSortedPlayers = useMemo(
+    () => [...players].sort((left, right) => right.impactScore - left.impactScore),
+    [players]
+  );
 
-  const recentOutputData = operations.recentMatches.map((entry, index) => {
-    const mapInfo = getCs2MapInfo(entry.map);
+  const recentOutputData = useMemo(
+    () =>
+      operations.recentMatches.map((entry, index) => {
+        const mapInfo = getCs2MapInfo(entry.map);
 
-    return {
-      key: entry.matchId,
-      label: `${mapInfo.code} ${index + 1}`,
-      mapCode: mapInfo.code,
-      mapName: mapInfo.displayName,
-      finishedAt: entry.finishedAt,
-      score: entry.score ?? "--",
-      result: entry.result,
-      averageKills: entry.averageKills,
-      averageKd: entry.averageKd,
-      averageKr: entry.averageKr,
-      averageAdr: entry.averageAdr,
-      averageUtilityDmg: entry.averageUtilityDmg,
-      averageHeadshotsPct: entry.averageHeadshotsPct,
-      multiKills: entry.multiKills,
-      standoutPlayer: entry.standoutPlayer ?? "--"
-    };
-  });
+        return {
+          key: entry.matchId,
+          label: `${mapInfo.code} ${index + 1}`,
+          mapCode: mapInfo.code,
+          mapName: mapInfo.displayName,
+          finishedAt: entry.finishedAt,
+          score: entry.score ?? "--",
+          result: entry.result,
+          averageKills: entry.averageKills,
+          averageKd: entry.averageKd,
+          averageKr: entry.averageKr,
+          averageAdr: entry.averageAdr,
+          averageUtilityDmg: entry.averageUtilityDmg,
+          averageHeadshotsPct: entry.averageHeadshotsPct,
+          multiKills: entry.multiKills,
+          standoutPlayer: entry.standoutPlayer ?? "--"
+        };
+      }),
+    [operations.recentMatches]
+  );
 
-  const multiKillData = (operations.multiKillLeaders ?? []).map((entry) => ({
-    nickname: entry.nickname,
-    "2K": entry.doubleKills,
-    "3K": entry.tripleKills,
-    "4K": entry.quadroKills,
-    "5K": entry.pentaKills,
-    total: entry.total
-  }));
+  const multiKillData = useMemo(
+    () =>
+      (operations.multiKillLeaders ?? []).map((entry) => ({
+        nickname: entry.nickname,
+        "2K": entry.doubleKills,
+        "3K": entry.tripleKills,
+        "4K": entry.quadroKills,
+        "5K": entry.pentaKills,
+        total: entry.total
+      })),
+    [operations.multiKillLeaders]
+  );
 
-  const matchDayMatches = [...operations.matchDayMatches].sort((left, right) =>
-    sortDateDescending(left.finishedAt, right.finishedAt)
+  const matchDayMatches = useMemo(
+    () =>
+      [...operations.matchDayMatches].sort((left, right) =>
+        sortDateDescending(left.finishedAt, right.finishedAt)
+      ),
+    [operations.matchDayMatches]
   );
   const matchDayWins = matchDayMatches.filter((entry) => entry.result === "W").length;
   const matchDayLosses = matchDayMatches.filter((entry) => entry.result === "L").length;
@@ -715,12 +741,7 @@ export function DashboardClient() {
               </span>
             </div>
 
-            <motion.div
-              className={styles.mvpSiren}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.12 }}
-            >
+            <div className={styles.mvpSiren}>
               <div className={styles.mvpBeacon} aria-hidden>
                 <span className={styles.mvpBeaconPulse} />
                 <span className={styles.mvpBeaconCore} />
@@ -734,7 +755,7 @@ export function DashboardClient() {
                 <span className={styles.mvpMetaPill}>{latestMvpStatus}</span>
                 <span className={styles.mvpMetaPill}>{formatPeakLabel(latestMvpPeak)}</span>
               </div>
-            </motion.div>
+            </div>
 
             <div className={styles.latestMatchStats}>
               <div>
@@ -833,7 +854,7 @@ export function DashboardClient() {
                       }}
                     />
                     <Legend />
-                    <Bar yAxisId="kills" dataKey="averageKills" name="Avg kills" radius={[10, 10, 0, 0]}>
+                    <Bar yAxisId="kills" dataKey="averageKills" name="Avg kills" radius={[10, 10, 0, 0]} isAnimationActive={false}>
                       {recentOutputData.map((entry) => (
                         <Cell
                           key={`${entry.key}-kills`}
@@ -848,6 +869,7 @@ export function DashboardClient() {
                       name="Avg K/D"
                       stroke="#ffe29b"
                       strokeWidth={3}
+                      isAnimationActive={false}
                       dot={{ r: 4, fill: "#ffe29b", strokeWidth: 0 }}
                       activeDot={{ r: 6 }}
                     />
@@ -894,10 +916,10 @@ export function DashboardClient() {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="2K" stackId="kills" fill="#ff6b4a" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="3K" stackId="kills" fill="#ff9954" />
-                    <Bar dataKey="4K" stackId="kills" fill="#f2c870" />
-                    <Bar dataKey="5K" stackId="kills" fill="#ffe4a2" />
+                    <Bar dataKey="2K" stackId="kills" fill="#ff6b4a" radius={[8, 8, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="3K" stackId="kills" fill="#ff9954" isAnimationActive={false} />
+                    <Bar dataKey="4K" stackId="kills" fill="#f2c870" isAnimationActive={false} />
+                    <Bar dataKey="5K" stackId="kills" fill="#ffe4a2" isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
