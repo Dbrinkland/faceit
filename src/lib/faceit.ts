@@ -190,9 +190,24 @@ function findDamageStats(
       "Entry duels attempted",
       "Entry Duels Attempted",
       "Opening duels attempted",
+      "Attempted Entries",
+      "Attempted Entry",
+      "Opening attempts",
       "Opening Attempts"
     ]) ??
-    pickNumberByKeyPattern(record, ["entry attempts", "entry attempt", "entry duel", "opening attempt"]) ??
+    pickNumberByKeyPattern(
+      record,
+      [
+        "entry attempts",
+        "entry attempt",
+        "entry duels attempted",
+        "opening duels attempted",
+        "attempted entries",
+        "attempted entry",
+        "opening attempts",
+        "opening attempt"
+      ]
+    ) ??
     null;
 
   if (adr !== null && utilityDmg !== null && effectiveFlashes !== null && entryAttempts !== null) {
@@ -478,9 +493,24 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
       "Entry attempt",
       "Entry duels attempted",
       "Opening duels attempted",
+      "Attempted Entries",
+      "Attempted Entry",
+      "Opening attempts",
       "Opening Attempts"
     ]) ??
-    pickNumberByKeyPattern(stats, ["entry attempts", "entry attempt", "entry duel", "opening attempt"]) ??
+    pickNumberByKeyPattern(
+      stats,
+      [
+        "entry attempts",
+        "entry attempt",
+        "entry duels attempted",
+        "opening duels attempted",
+        "attempted entries",
+        "attempted entry",
+        "opening attempts",
+        "opening attempt"
+      ]
+    ) ??
     damageFromItem.entryAttempts ??
     null;
   const doubleKills = pickNumber(stats, ["Double Kills"]) ?? 0;
