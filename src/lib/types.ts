@@ -109,7 +109,10 @@ export type SquadRecentMatch = {
   trackedPlayers: number;
   averageKills: number;
   averageKd: number;
+  averageKr: number;
   averageHeadshotsPct: number;
+  averageAdr: number | null;
+  averageUtilityDmg: number | null;
   multiKills: number;
   peakMultiKill: number;
   standoutPlayer: string | null;
@@ -122,6 +125,7 @@ export type SquadMapPerformance = {
   averageKills: number;
   averageKd: number;
   averageHeadshotsPct: number;
+  averageAdr: number | null;
   multiKills: number;
   lastPlayedAt: string | null;
   standoutPlayer: string | null;

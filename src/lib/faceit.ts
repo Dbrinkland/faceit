@@ -585,7 +585,10 @@ function buildOperations(players: PlayerSnapshot[]): {
           nickname: string;
           kills: number;
           kd: number;
+          kr: number;
           headshotsPct: number;
+          adr: number | null;
+          utilityDmg: number | null;
           doubleKills: number;
           tripleKills: number;
           quadroKills: number;
@@ -619,7 +622,10 @@ function buildOperations(players: PlayerSnapshot[]): {
           nickname: player.nickname,
           kills: match.kills,
           kd: match.kd,
+          kr: match.kr,
           headshotsPct: match.headshotsPct,
+          adr: match.adr,
+          utilityDmg: match.utilityDmg,
           doubleKills: match.doubleKills,
           tripleKills: match.tripleKills,
           quadroKills: match.quadroKills,
@@ -635,7 +641,14 @@ function buildOperations(players: PlayerSnapshot[]): {
       .map<SquadRecentMatch>((entry) => {
         const averageKills = average(entry.players.map((player) => player.kills));
         const averageKd = average(entry.players.map((player) => player.kd));
+        const averageKr = average(entry.players.map((player) => player.kr));
         const averageHeadshotsPct = average(entry.players.map((player) => player.headshotsPct));
+        const adrValues = entry.players
+          .map((player) => player.adr)
+          .filter((value): value is number => value !== null);
+        const utilityValues = entry.players
+          .map((player) => player.utilityDmg)
+          .filter((value): value is number => value !== null);
         const multiKills = sum(
           entry.players.map(
             (player) => player.doubleKills + player.tripleKills + player.quadroKills + player.pentaKills
@@ -659,7 +672,10 @@ function buildOperations(players: PlayerSnapshot[]): {
           trackedPlayers: entry.players.length,
           averageKills: round(averageKills, 1),
           averageKd: round(averageKd, 2),
+          averageKr: round(averageKr, 2),
           averageHeadshotsPct: round(averageHeadshotsPct, 1),
+          averageAdr: adrValues.length > 0 ? round(average(adrValues), 0) : null,
+          averageUtilityDmg: utilityValues.length > 0 ? round(average(utilityValues), 0) : null,
           multiKills,
           peakMultiKill,
           standoutPlayer: standout?.nickname ?? null
@@ -679,6 +695,7 @@ function buildOperations(players: PlayerSnapshot[]): {
       kills: number[];
       kd: number[];
       headshotsPct: number[];
+      adr: number[];
       multiKills: number;
       lastPlayedAt: string | null;
       players: Map<string, { kills: number[]; kd: number[] }>;
@@ -699,6 +716,7 @@ function buildOperations(players: PlayerSnapshot[]): {
         kills: [] as number[],
         kd: [] as number[],
         headshotsPct: [] as number[],
+        adr: [] as number[],
         multiKills: 0,
         lastPlayedAt: null,
         players: new Map()
@@ -709,6 +727,9 @@ function buildOperations(players: PlayerSnapshot[]): {
       current.kills.push(match.kills);
       current.kd.push(match.kd);
       current.headshotsPct.push(match.headshotsPct);
+      if (match.adr !== null) {
+        current.adr.push(match.adr);
+      }
       current.multiKills += match.doubleKills + match.tripleKills + match.quadroKills + match.pentaKills;
       current.lastPlayedAt =
         !current.lastPlayedAt || sortDateDescending(current.lastPlayedAt, match.finishedAt) > 0
@@ -739,6 +760,7 @@ function buildOperations(players: PlayerSnapshot[]): {
         averageKills: round(average(entry.kills), 1),
         averageKd: round(average(entry.kd), 2),
         averageHeadshotsPct: round(average(entry.headshotsPct), 1),
+        averageAdr: entry.adr.length > 0 ? round(average(entry.adr), 0) : null,
         multiKills: entry.multiKills,
         lastPlayedAt: entry.lastPlayedAt,
         standoutPlayer: standout?.nickname ?? null

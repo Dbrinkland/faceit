@@ -44,6 +44,41 @@
   padding: 10px 0;
 }
 
+.toggleButton {
+  width: 100%;
+  margin-top: 4px;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 240, 236, 0.88);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggleButtonActive {
+  border-color: rgba(255, 145, 112, 0.32);
+  background: linear-gradient(135deg, rgba(255, 64, 45, 0.18), rgba(255, 130, 90, 0.12));
+}
+
+.toggleDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(245, 240, 236, 0.34);
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.04);
+}
+
+.toggleDotActive {
+  background: #ff8a64;
+  box-shadow: 0 0 0 5px rgba(255, 98, 68, 0.14);
+}
+
 .row strong,
 .row p {
   margin: 0;

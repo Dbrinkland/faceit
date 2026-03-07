@@ -2,18 +2,26 @@
 
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
-import { Cog, Link2, ShieldCheck, Zap } from "lucide-react";
+import { CalendarDays, Cog, Link2, ShieldCheck, Zap } from "lucide-react";
 import { useState } from "react";
 
 import styles from "./DashboardSettings.module.css";
 
 type DashboardSettingsProps = {
+  lockToMatchDay: boolean;
+  onToggleLockToMatchDay: () => void;
   onReplayTeaser?: () => void;
   trackedNicknames: string[];
   sourceLabel: string;
 };
 
-export function DashboardSettings({ onReplayTeaser, trackedNicknames, sourceLabel }: DashboardSettingsProps) {
+export function DashboardSettings({
+  lockToMatchDay,
+  onReplayTeaser,
+  onToggleLockToMatchDay,
+  trackedNicknames,
+  sourceLabel
+}: DashboardSettingsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -37,6 +45,22 @@ export function DashboardSettings({ onReplayTeaser, trackedNicknames, sourceLabe
             initial={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
+            <div className={styles.row}>
+              <CalendarDays size={16} />
+              <div>
+                <strong>Lock to 20 maps day</strong>
+                <p>Vis kun data fra 07.03.2026, så hele dashboardet følger dagen kamp for kamp.</p>
+              </div>
+            </div>
+            <button
+              aria-pressed={lockToMatchDay}
+              className={clsx(styles.toggleButton, lockToMatchDay && styles.toggleButtonActive)}
+              onClick={onToggleLockToMatchDay}
+              type="button"
+            >
+              <span>{lockToMatchDay ? "Unlock day filter" : "Lock to 07.03.2026"}</span>
+              <span className={clsx(styles.toggleDot, lockToMatchDay && styles.toggleDotActive)} />
+            </button>
             <div className={styles.row}>
               <ShieldCheck size={16} />
               <div>
