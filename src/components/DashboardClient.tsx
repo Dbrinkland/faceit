@@ -270,6 +270,7 @@ export function DashboardClient() {
           averageUtilityDmg: entry.averageUtilityDmg,
           averageEffectiveFlashes: entry.averageEffectiveFlashes,
           averageEntryAttempts: entry.averageEntryAttempts,
+          averageEntryKills: entry.averageEntryKills,
           averageHeadshotsPct: entry.averageHeadshotsPct,
           multiKills: entry.multiKills,
           standoutPlayer: entry.standoutPlayer ?? "--"
@@ -313,6 +314,9 @@ export function DashboardClient() {
     .filter((value): value is number => value !== null);
   const recentEntryAttemptValues = players
     .map((player) => player.stats.recentEntryAttempts)
+    .filter((value): value is number => value !== null);
+  const recentEntryKillValues = players
+    .map((player) => player.stats.recentEntryKills)
     .filter((value): value is number => value !== null);
   const latestMvpNickname = latestMatch?.standoutPlayer ?? summary?.bestPerformer?.nickname ?? null;
   const latestMvpPlayer =
@@ -406,11 +410,16 @@ export function DashboardClient() {
             )
           : "--",
       detail:
-        recentEffectiveFlashValues.length > 0
+        recentEntryKillValues.length > 0
           ? `${formatNumber(
-              recentEffectiveFlashValues.reduce((sum, value) => sum + value, 0) / recentEffectiveFlashValues.length,
+              recentEntryKillValues.reduce((sum, value) => sum + value, 0) / recentEntryKillValues.length,
               1
-            )} effective flashes`
+            )} entry kills`
+          : recentEffectiveFlashValues.length > 0
+            ? `${formatNumber(
+                recentEffectiveFlashValues.reduce((sum, value) => sum + value, 0) / recentEffectiveFlashValues.length,
+                1
+              )} effective flashes`
           : "flash data pending",
       icon: AlertTriangle
     },
@@ -825,6 +834,10 @@ export function DashboardClient() {
                 <span>Entry attempts</span>
                 <strong>{formatNumber(latestMatch?.averageEntryAttempts ?? null, 1)}</strong>
               </div>
+              <div>
+                <span>Entry kills</span>
+                <strong>{formatNumber(latestMatch?.averageEntryKills ?? null, 1)}</strong>
+              </div>
             </div>
 
             <div className={styles.statusRow}>
@@ -1009,6 +1022,7 @@ export function DashboardClient() {
                     <th>Avg ADR</th>
                     <th>Eff. flashes</th>
                     <th>Entry attempts</th>
+                    <th>Entry kills</th>
                     <th>Multi</th>
                     <th>Standout</th>
                   </tr>
@@ -1040,6 +1054,7 @@ export function DashboardClient() {
                         <td>{formatNumber(entry.averageAdr ?? null, 0)}</td>
                         <td>{formatNumber(entry.averageEffectiveFlashes ?? null, 1)}</td>
                         <td>{formatNumber(entry.averageEntryAttempts ?? null, 1)}</td>
+                        <td>{formatNumber(entry.averageEntryKills ?? null, 1)}</td>
                         <td>{entry.multiKills}</td>
                         <td>{entry.standoutPlayer ?? "--"}</td>
                       </tr>
@@ -1082,6 +1097,7 @@ export function DashboardClient() {
                     <th>Utility dmg</th>
                     <th>Eff. flashes</th>
                     <th>Entry att.</th>
+                    <th>Entry kills</th>
                     <th>Multi</th>
                   </tr>
                 </thead>
@@ -1105,6 +1121,7 @@ export function DashboardClient() {
                         <td>{hasPlayerData ? formatNumber(player.stats.recentUtilityDmg ?? null, 0) : "--"}</td>
                         <td>{hasPlayerData ? formatNumber(player.stats.recentEffectiveFlashes ?? null, 1) : "--"}</td>
                         <td>{hasPlayerData ? formatNumber(player.stats.recentEntryAttempts ?? null, 1) : "--"}</td>
+                        <td>{hasPlayerData ? formatNumber(player.stats.recentEntryKills ?? null, 1) : "--"}</td>
                         <td>{hasPlayerData ? player.stats.multiKills.total : "--"}</td>
                       </tr>
                     );

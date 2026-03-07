@@ -218,9 +218,10 @@ function findDamageStats(
   utilityDmg: number | null;
   effectiveFlashes: number | null;
   entryAttempts: number | null;
+  entryKills: number | null;
 } {
   if (depth > 3 || obj === null || typeof obj !== "object") {
-    return { adr: null, utilityDmg: null, effectiveFlashes: null, entryAttempts: null };
+    return { adr: null, utilityDmg: null, effectiveFlashes: null, entryAttempts: null, entryKills: null };
   }
   const record = obj as JsonRecord;
   const adr =
@@ -268,9 +269,19 @@ function findDamageStats(
       ]
     ) ??
     null;
+  const entryKills =
+    pickNumber(record, ["Entry Kills", "Entry kills", "Opening Kills", "Opening kills", "Entry Frags"]) ??
+    pickNumberByKeyPattern(record, ["entry kills", "opening kills", "entry frags", "opening frags"]) ??
+    null;
 
-  if (adr !== null && utilityDmg !== null && effectiveFlashes !== null && entryAttempts !== null) {
-    return { adr, utilityDmg, effectiveFlashes, entryAttempts };
+  if (
+    adr !== null &&
+    utilityDmg !== null &&
+    effectiveFlashes !== null &&
+    entryAttempts !== null &&
+    entryKills !== null
+  ) {
+    return { adr, utilityDmg, effectiveFlashes, entryAttempts, entryKills };
   }
   for (const value of Object.values(record)) {
     if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -279,18 +290,20 @@ function findDamageStats(
         nested.adr !== null ||
         nested.utilityDmg !== null ||
         nested.effectiveFlashes !== null ||
-        nested.entryAttempts !== null
+        nested.entryAttempts !== null ||
+        nested.entryKills !== null
       ) {
         return {
           adr: nested.adr ?? adr,
           utilityDmg: nested.utilityDmg ?? utilityDmg,
           effectiveFlashes: nested.effectiveFlashes ?? effectiveFlashes,
-          entryAttempts: nested.entryAttempts ?? entryAttempts
+          entryAttempts: nested.entryAttempts ?? entryAttempts,
+          entryKills: nested.entryKills ?? entryKills
         };
       }
     }
   }
-  return { adr, utilityDmg, effectiveFlashes, entryAttempts };
+  return { adr, utilityDmg, effectiveFlashes, entryAttempts, entryKills };
 }
 
 function resolveMapName(value: unknown): string | null {
@@ -572,6 +585,11 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
     ) ??
     damageFromItem.entryAttempts ??
     null;
+  const entryKills =
+    pickNumber(stats, ["Entry Kills", "Entry kills", "Opening Kills", "Opening kills", "Entry Frags"]) ??
+    pickNumberByKeyPattern(stats, ["entry kills", "opening kills", "entry frags", "opening frags"]) ??
+    damageFromItem.entryKills ??
+    null;
   const doubleKills = pickNumber(stats, ["Double Kills"]) ?? 0;
   const tripleKills = pickNumber(stats, ["Triple Kills"]) ?? 0;
   const quadroKills = pickNumber(stats, ["Quadro Kills"]) ?? 0;
@@ -613,7 +631,8 @@ function mapFormItem(item: JsonRecord, fallback: PlayerHistoryEntry | undefined,
     adr: adr !== null ? round(adr, 0) : null,
     utilityDmg: utilityDmg !== null ? round(utilityDmg, 0) : null,
     effectiveFlashes: effectiveFlashes !== null ? round(effectiveFlashes, 1) : null,
-    entryAttempts: entryAttempts !== null ? round(entryAttempts, 1) : null
+    entryAttempts: entryAttempts !== null ? round(entryAttempts, 1) : null,
+    entryKills: entryKills !== null ? round(entryKills, 1) : null
   };
 }
 
@@ -736,6 +755,7 @@ function buildOperations(players: PlayerSnapshot[]): {
           utilityDmg: number | null;
           effectiveFlashes: number | null;
           entryAttempts: number | null;
+          entryKills: number | null;
           doubleKills: number;
           tripleKills: number;
           quadroKills: number;
@@ -775,6 +795,7 @@ function buildOperations(players: PlayerSnapshot[]): {
           utilityDmg: match.utilityDmg,
           effectiveFlashes: match.effectiveFlashes,
           entryAttempts: match.entryAttempts,
+          entryKills: match.entryKills,
           doubleKills: match.doubleKills,
           tripleKills: match.tripleKills,
           quadroKills: match.quadroKills,
@@ -803,6 +824,9 @@ function buildOperations(players: PlayerSnapshot[]): {
           .filter((value): value is number => value !== null);
         const entryAttemptValues = entry.players
           .map((player) => player.entryAttempts)
+          .filter((value): value is number => value !== null);
+        const entryKillValues = entry.players
+          .map((player) => player.entryKills)
           .filter((value): value is number => value !== null);
         const multiKills = sum(
           entry.players.map(
@@ -835,6 +859,8 @@ function buildOperations(players: PlayerSnapshot[]): {
             effectiveFlashValues.length > 0 ? round(average(effectiveFlashValues), 1) : null,
           averageEntryAttempts:
             entryAttemptValues.length > 0 ? round(average(entryAttemptValues), 1) : null,
+          averageEntryKills:
+            entryKillValues.length > 0 ? round(average(entryKillValues), 1) : null,
           multiKills,
           peakMultiKill,
           standoutPlayer: standout?.nickname ?? null
@@ -1081,7 +1107,11 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
   const matchDayForm = (matchDayStatsResponse.items ?? [])
     .filter(isRecord)
     .slice(0, MATCH_DAY_LIMIT)
-    .map((item, index) => mapFormItem(item, undefined, index));
+    .map((item, index) => {
+      const matchId = asString(item.match_id ?? item.matchId);
+      const fallback = (matchId ? historyById.get(matchId) : undefined) ?? historyEntries[index];
+      return mapFormItem(item, fallback, index);
+    });
 
   const matchesReviewed = form.length;
   const wins = form.filter((match) => match.result === "W").length;
@@ -1112,6 +1142,10 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
     .map((match) => match.entryAttempts)
     .filter((v): v is number => v !== null);
   const recentEntryAttempts = entryAttemptValues.length > 0 ? round(average(entryAttemptValues), 1) : null;
+  const entryKillValues = form
+    .map((match) => match.entryKills)
+    .filter((v): v is number => v !== null);
+  const recentEntryKills = entryKillValues.length > 0 ? round(average(entryKillValues), 1) : null;
   const totalKills = sum(form.map((match) => match.kills));
   const totalAssists = sum(form.map((match) => match.assists));
   const totalDeaths = sum(form.map((match) => match.deaths));
@@ -1153,6 +1187,7 @@ async function hydratePlayer(nickname: string, apiKey: string): Promise<PlayerSn
       recentUtilityDmg,
       recentEffectiveFlashes,
       recentEntryAttempts,
+      recentEntryKills,
       totalKills,
       totalAssists,
       totalDeaths,
