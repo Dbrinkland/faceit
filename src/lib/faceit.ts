@@ -18,6 +18,7 @@ const RECENT_MATCH_LIMIT = 20;
 const HISTORY_LIMIT = 10;
 const MATCH_DAY_LIMIT = 20;
 const MATCH_DAY_TIME_ZONE = "Europe/Copenhagen";
+const MATCH_DAY_SPAN_DAYS = 2;
 
 type JsonRecord = Record<string, unknown>;
 type MatchPlayerAdvancedStats = {
@@ -174,9 +175,20 @@ function zonedDateTimeToUtcMs(
 }
 
 function getMatchDayWindow(now = new Date(), timeZone = MATCH_DAY_TIME_ZONE) {
-  const { year, month, day } = getDatePartsInTimeZone(now, timeZone);
-  const from = zonedDateTimeToUtcMs(year, month, day, 0, 0, 0, 0, timeZone);
-  const to = zonedDateTimeToUtcMs(year, month, day, 23, 59, 59, 999, timeZone);
+  const endParts = getDatePartsInTimeZone(now, timeZone);
+  const startAnchor = new Date(now.getTime() - (MATCH_DAY_SPAN_DAYS - 1) * 24 * 60 * 60 * 1000);
+  const startParts = getDatePartsInTimeZone(startAnchor, timeZone);
+  const from = zonedDateTimeToUtcMs(
+    startParts.year,
+    startParts.month,
+    startParts.day,
+    0,
+    0,
+    0,
+    0,
+    timeZone
+  );
+  const to = zonedDateTimeToUtcMs(endParts.year, endParts.month, endParts.day, 23, 59, 59, 999, timeZone);
   return { from, to };
 }
 

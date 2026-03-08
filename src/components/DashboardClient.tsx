@@ -69,6 +69,14 @@ function formatPeakLabel(value: number) {
   return value >= 2 ? `${value}K peak` : "Ingen peak";
 }
 
+function formatMatchDayScopeDate(date: Date) {
+  return new Intl.DateTimeFormat("da-DK", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Europe/Copenhagen"
+  }).format(date);
+}
+
 type ViewMode = "dashboard" | "sonny" | "tactics" | "snacks";
 type SnackLoadEntry = {
   nickname: string;
@@ -142,16 +150,11 @@ export function DashboardClient() {
   const latestMap = getCs2MapInfo(latestMatch?.map ?? null);
   const sourceLabel =
     source === "live" ? "Live snapshot" : source === "cache" ? "Cached snapshot" : "Ingen snapshot endnu";
-  const matchDayLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat("da-DK", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        timeZone: "Europe/Copenhagen"
-      }).format(syncStamp ? new Date(syncStamp) : new Date()),
-    [syncStamp]
-  );
+  const matchDayScopeLabel = useMemo(() => {
+    const toDate = syncStamp ? new Date(syncStamp) : new Date();
+    const fromDate = new Date(toDate.getTime() - 24 * 60 * 60 * 1000);
+    return `${formatMatchDayScopeDate(fromDate)} - ${formatMatchDayScopeDate(toDate)}`;
+  }, [syncStamp]);
 
   useEffect(() => {
     try {
@@ -453,7 +456,7 @@ export function DashboardClient() {
       icon: Shield
     },
     {
-      label: `${matchDayLabel} matches`,
+      label: `${matchDayScopeLabel} matches`,
       value: formatNumber(matchDayMatches.length),
       detail: `${matchDayWins}W / ${matchDayLosses}L`,
       icon: CalendarDays
@@ -717,15 +720,9 @@ export function DashboardClient() {
         <div className={styles.rosterGrid}>
           {orderedPlayers.map((player, index) => {
             const lastMap = getCs2MapInfo(player.lastMatch?.map ?? null);
-            const previousMatch = player.stats.form.at(-2) ?? null;
-            const killsDelta =
-              player.lastMatch && previousMatch ? player.lastMatch.kills - previousMatch.kills : null;
-            const kdDelta =
-              player.lastMatch && previousMatch ? player.lastMatch.kd - previousMatch.kd : null;
-            const vsPreviousLabel =
-              killsDelta !== null && kdDelta !== null
-                ? `${formatSignedNumber(killsDelta, 0)} K · ${formatSignedNumber(kdDelta, 2)} K/D`
-                : "--";
+            const playerWins = player.stats.form.filter((match) => match.result === "W").length;
+            const playerLosses = player.stats.form.filter((match) => match.result === "L").length;
+            const playerEloDelta = (playerWins - playerLosses) * FACEIT_ELO_STEP;
 
             return (
               <motion.article
@@ -747,7 +744,10 @@ export function DashboardClient() {
                     <div>
                       <p className={styles.playerName}>{player.nickname}</p>
                       <p className={styles.playerMeta}>
-                        {lastMap.displayName} · {formatDateTime(player.lastMatch?.finishedAt ?? null)}
+                        {lastMap.displayName} | {formatDateTime(player.lastMatch?.finishedAt ?? null)}
+                      </p>
+                      <p className={clsx(styles.playerStatSub, playerEloDelta > 0 && styles.playerStatSubPositive, playerEloDelta < 0 && styles.playerStatSubNegative)}>
+                        ELO +/- {formatSignedNumber(playerEloDelta, 0)} | {playerWins}W / {playerLosses}L
                       </p>
                     </div>
                   </div>
@@ -778,10 +778,6 @@ export function DashboardClient() {
                   <div>
                     <span>Streak</span>
                     <strong>{formatNumber(player.stats.lifetime.currentWinStreak)}</strong>
-                  </div>
-                  <div>
-                    <span>Vs forrige</span>
-                    <strong>{vsPreviousLabel}</strong>
                   </div>
                 </div>
 
@@ -1038,7 +1034,7 @@ export function DashboardClient() {
       <section className={styles.detailGrid}>
         <article className={styles.tableCard}>
           <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle}>Match Day · {matchDayLabel}</h2>
+            <h2 className={styles.sectionTitle}>Match Day · {matchDayScopeLabel}</h2>
             <span className={styles.sectionBadge}>
               {matchDayMatches.length} matches · {matchDayMultiKills} multi-kills
             </span>
@@ -1233,7 +1229,7 @@ export function DashboardClient() {
             Sync: {syncStamp ? `${formatAgo(syncStamp)} · ${formatDateTime(syncStamp)}` : "afventer"}
           </span>
           <span className={styles.pill}>Latest map: {latestMap.displayName}</span>
-          <span className={styles.pill}>07.03: {matchDayMatches.length} matches</span>
+          <span className={styles.pill}>{matchDayScopeLabel}: {matchDayMatches.length} matches</span>
           <span className={clsx(styles.pill, lockToMatchDay && styles.pillLive)}>
             {lockToMatchDay ? "Locked: dagens dato" : "Scope: all recent"}
           </span>
